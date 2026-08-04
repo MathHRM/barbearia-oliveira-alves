@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Barbearia Oliveira Alves — Direções visuais</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#08090a;color:#e8eaed;font-family:Inter,system-ui,sans-serif}
+
+/* ---------- chrome do comparador ---------- */
+.bar{position:sticky;top:0;z-index:50;display:flex;gap:8px;align-items:center;
+  padding:12px 20px;background:#0d0f11;border-bottom:1px solid #1c2024}
+.bar b{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#7c858e;margin-right:auto}
+.tab{padding:9px 16px;border-radius:999px;border:1px solid #23282d;background:transparent;
+  color:#9aa3ab;font:600 13px Inter;cursor:pointer}
+.tab[aria-selected=true]{background:#21C3E0;border-color:#21C3E0;color:#04212a}
+.wrap{max-width:1180px;margin:0 auto;padding:36px 20px 90px}
+.dirhead{margin:14px 0 26px}
+.dirhead h2{font:700 26px Inter;letter-spacing:-.02em}
+.dirhead p{color:#8b949d;font-size:14px;margin-top:6px;max-width:70ch;line-height:1.6}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chip{font:500 11px/1 JetBrains Mono,monospace;padding:6px 9px;border:1px solid #23282d;border-radius:6px;color:#8b949d}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block;vertical-align:-1px;margin-right:6px}
+.label{font:600 11px Inter;letter-spacing:.16em;text-transform:uppercase;color:#5d666e;margin:34px 0 12px}
+.frame{border:1px solid #1c2024;border-radius:14px;overflow:hidden}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+[hidden]{display:none!important}
+
+/* ============ A — NEON BARBER ============ */
+.A{--bg:#000;--surf:#0b0d0f;--line:#1b2126;--cy:#21C3E0;--ink:#fff;--mut:#8a949c}
+.A{background:var(--bg);color:var(--ink);font-family:Inter}
+.A .hero{padding:52px 40px;position:relative;overflow:hidden}
+.A .hero:after{content:"";position:absolute;inset:auto -20% -70% 30%;height:340px;
+  background:radial-gradient(50% 50% at 50% 50%,rgba(33,195,224,.28),transparent 70%);filter:blur(10px)}
+.A .kicker{font:600 11px Inter;letter-spacing:.34em;color:var(--cy);text-transform:uppercase}
+.A h1{font-family:Anton,sans-serif;font-size:70px;line-height:.94;letter-spacing:.005em;
+  text-transform:uppercase;margin:16px 0 0}
+.A h1 em{font-style:normal;color:var(--cy);text-shadow:0 0 26px rgba(33,195,224,.55)}
+.A .sub{color:var(--mut);margin-top:16px;max-width:44ch;line-height:1.65;font-size:15px}
+.A .cta{display:inline-flex;align-items:center;gap:10px;margin-top:26px;padding:15px 28px;
+  background:var(--cy);color:#00161c;border:0;border-radius:6px;font:800 14px Inter;
+  letter-spacing:.06em;text-transform:uppercase;box-shadow:0 0 0 1px rgba(33,195,224,.4),0 10px 40px -8px rgba(33,195,224,.6);cursor:pointer}
+.A .ghost{margin-left:10px;padding:15px 24px;background:transparent;color:var(--ink);
+  border:1px solid #2a3238;border-radius:6px;font:700 14px Inter;text-transform:uppercase;letter-spacing:.06em}
+.A .strip{display:flex;gap:0;border-top:1px solid var(--line);position:relative;z-index:2}
+.A .strip div{flex:1;padding:20px 22px;border-right:1px solid var(--line)}
+.A .strip div:last-child{border-right:0}
+.A .strip b{display:block;font-family:Bebas Neue;font-size:26px;letter-spacing:.03em}
+.A .strip span{font-size:11px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase}
+.A .card{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:22px}
+.A .svc{display:flex;justify-content:space-between;align-items:center;padding:15px 16px;
+  border:1px solid var(--line);border-radius:8px;margin-bottom:9px;background:#000;cursor:pointer}
+.A .svc.on{border-color:var(--cy);box-shadow:0 0 0 1px var(--cy),0 0 30px -10px rgba(33,195,224,.7)}
+.A .svc h4{font:700 15px Inter}
+.A .svc small{color:var(--mut);font-size:12px}
+.A .svc .p{font-family:Bebas Neue;font-size:24px;color:var(--cy);letter-spacing:.02em}
+.A .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.A .slot{padding:11px 0;text-align:center;border:1px solid var(--line);border-radius:6px;
+  font:600 13px JetBrains Mono,monospace;color:#c7ced4;background:#000}
+.A .slot.on{background:var(--cy);color:#00161c;border-color:var(--cy)}
+.A .slot.off{color:#3a4248;text-decoration:line-through;border-color:#14181b}
+.A .steps{display:flex;gap:8px;margin-bottom:20px}
+.A .steps i{flex:1;height:3px;background:#1b2126;border-radius:2px;font-style:normal}
+.A .steps i.on{background:var(--cy)}
+
+/* ============ B — PREMIUM FADE ============ */
+.B{--bg:#0E1113;--surf:#151A1D;--line:#232B30;--cy:#21C3E0;--gold:#C9A227;--ink:#F2F0EC;--mut:#98A1A8}
+.B{background:var(--bg);color:var(--ink);font-family:Inter}
+.B .hero{padding:64px 48px;display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
+@media(max-width:900px){.B .hero{grid-template-columns:1fr}}
+.B .rule{display:flex;align-items:center;gap:12px;color:var(--cy);
+  font:500 11px Inter;letter-spacing:.3em;text-transform:uppercase}
+.B .rule:before{content:"";width:36px;height:1px;background:var(--cy)}
+.B h1{font-family:Fraunces,serif;font-weight:600;font-size:52px;line-height:1.06;
+  letter-spacing:-.02em;margin:20px 0 0}
+.B h1 em{font-style:italic;color:var(--cy)}
+.B .sub{color:var(--mut);margin-top:18px;max-width:46ch;line-height:1.75;font-size:15.5px}
+.B .cta{margin-top:28px;padding:15px 30px;background:var(--ink);color:#0E1113;border:0;
+  border-radius:2px;font:600 13px Inter;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.B .ghost{margin-left:12px;padding:15px 26px;background:transparent;color:var(--mut);
+  border:1px solid var(--line);border-radius:2px;font:500 13px Inter;letter-spacing:.1em;text-transform:uppercase}
+.B .plate{aspect-ratio:1;border:1px solid var(--line);border-radius:2px;
+  background:linear-gradient(160deg,#171D21,#0E1113);display:grid;place-items:center;padding:34px}
+.B .card{background:var(--surf);border:1px solid var(--line);border-radius:3px;padding:26px}
+.B .svc{display:flex;justify-content:space-between;align-items:baseline;padding:17px 2px;
+  border-bottom:1px solid var(--line);cursor:pointer}
+.B .svc.on{border-bottom-color:var(--cy)}
+.B .svc h4{font-family:Fraunces,serif;font-weight:600;font-size:18px}
+.B .svc small{color:var(--mut);font-size:12.5px;display:block;margin-top:3px}
+.B .svc .p{font-family:Fraunces,serif;font-size:19px;color:var(--cy)}
+.B .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px}
+.B .slot{padding:12px 0;text-align:center;border:1px solid var(--line);border-radius:2px;
+  font:500 13px Inter;color:#CBD2D7}
+.B .slot.on{background:var(--cy);color:#06232b;border-color:var(--cy)}
+.B .slot.off{color:#3E464C;border-color:#1A2024}
+.B .steps{display:flex;gap:22px;margin-bottom:22px;font:500 11px Inter;letter-spacing:.18em;text-transform:uppercase;color:#4E585F}
+.B .steps span.on{color:var(--cy)}
+
+/* ============ C — MODERN UTILITY ============ */
+.C{--bg:#0A0F14;--surf:#111820;--surf2:#16202A;--line:#1E2A35;--cy:#21C3E0;--ink:#EAF2F6;--mut:#8899A6}
+.C{background:var(--bg);color:var(--ink);font-family:Space Grotesk,Inter,sans-serif}
+.C .hero{padding:46px 38px;background:
+  radial-gradient(120% 90% at 82% 0%,rgba(33,195,224,.16),transparent 58%),var(--bg)}
+.C .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;
+  background:rgba(33,195,224,.11);border:1px solid rgba(33,195,224,.32);color:var(--cy);
+  font:600 12px Space Grotesk}
+.C h1{font-size:48px;line-height:1.08;letter-spacing:-.035em;font-weight:700;margin:18px 0 0}
+.C h1 span{color:var(--cy)}
+.C .sub{color:var(--mut);margin-top:16px;max-width:48ch;line-height:1.7;font-size:15.5px;font-family:Inter}
+.C .cta{margin-top:26px;padding:14px 26px;background:var(--cy);color:#04212a;border:0;
+  border-radius:12px;font:700 15px Space Grotesk;cursor:pointer;box-shadow:0 12px 34px -14px rgba(33,195,224,.9)}
+.C .ghost{margin-left:10px;padding:14px 22px;background:var(--surf2);color:var(--ink);
+  border:1px solid var(--line);border-radius:12px;font:600 15px Space Grotesk}
+.C .card{background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:22px}
+.C .svc{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:15px;
+  border:1px solid var(--line);border-radius:14px;margin-bottom:10px;background:var(--surf2);cursor:pointer}
+.C .svc.on{border-color:var(--cy);background:rgba(33,195,224,.09)}
+.C .svc h4{font:600 15.5px Space Grotesk}
+.C .svc small{color:var(--mut);font:400 12.5px Inter}
+.C .svc .p{font:700 17px Space Grotesk;color:var(--cy)}
+.C .slots{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}
+.C .slot{padding:12px 0;text-align:center;border:1px solid var(--line);border-radius:11px;
+  font:600 13.5px Space Grotesk;background:var(--surf2);color:#C4D0D9}
+.C .slot.on{background:var(--cy);color:#04212a;border-color:var(--cy)}
+.C .slot.off{color:#3B4854;background:transparent;border-color:#182430}
+.C .steps{display:flex;gap:10px;margin-bottom:20px}
+.C .steps b{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;
+  font:700 12px Space Grotesk;background:var(--surf2);border:1px solid var(--line);color:var(--mut)}
+.C .steps b.on{background:var(--cy);color:#04212a;border-color:var(--cy)}
+
+/* comuns às três amostras */
+.logo{height:46px;border-radius:6px}
+.row{display:flex;align-items:center;gap:14px}
+.mut{color:#8b949d}
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:18px;
+  padding-top:16px;border-top:1px solid currentColor;border-color:#ffffff14}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
+.cal span{text-align:center;font:600 10px Inter;letter-spacing:.1em;color:#6d7780;padding-bottom:2px}
+.cal a{text-align:center;padding:9px 0;font:600 13px Inter;color:#cfd6db;border-radius:8px;text-decoration:none}
+.cal a.dim{color:#3d464d}
+.cal a.sel{background:#21C3E0;color:#04212a}
+
+/* admin preview */
+.adm{background:#F7F8FA;color:#0F172A;font-family:Inter}
+.adm .top{display:flex;align-items:center;gap:14px;padding:14px 20px;background:#0B0F13;color:#fff}
+.adm .top b{font-family:Bebas Neue;font-size:20px;letter-spacing:.06em}
+.adm .body{display:grid;grid-template-columns:190px 1fr;min-height:330px}
+.adm .side{background:#fff;border-right:1px solid #E6E9EE;padding:14px}
+.adm .side a{display:block;padding:9px 11px;border-radius:8px;font:500 13.5px Inter;color:#475569;text-decoration:none}
+.adm .side a.on{background:#0B0F13;color:#fff}
+.adm .main{padding:20px;display:grid;gap:14px}
+.adm .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.adm .kpi{background:#fff;border:1px solid #E6E9EE;border-radius:12px;padding:14px}
+.adm .kpi span{font:600 11px Inter;letter-spacing:.08em;text-transform:uppercase;color:#7C8794}
+.adm .kpi b{display:block;font:700 24px Inter;margin-top:6px;letter-spacing:-.02em}
+.adm .kpi i{font-style:normal;font:600 12px Inter;color:#0E9F6E}
+.adm table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #E6E9EE;border-radius:12px;overflow:hidden}
+.adm th{text-align:left;font:600 11px Inter;letter-spacing:.08em;text-transform:uppercase;
+  color:#7C8794;padding:10px 12px;background:#FBFCFD;border-bottom:1px solid #E6E9EE}
+.adm td{padding:11px 12px;font:500 13.5px Inter;border-bottom:1px solid #F0F2F5}
+.adm .badge{font:600 11px Inter;padding:3px 9px;border-radius:999px}
+.bg-conf{background:#E7F7F0;color:#0A7C57}.bg-pend{background:#FEF6E0;color:#96690B}
+.bg-vindo{background:#E6F0FF;color:#1D4ED8}.bg-canc{background:#FDECEC;color:#B42318}
+.adm .btn{font:600 12px Inter;padding:6px 11px;border-radius:8px;border:1px solid #D8DDE4;background:#fff;cursor:pointer}
+.adm .btn.pri{background:#0B0F13;color:#fff;border-color:#0B0F13}
+.bars{display:flex;align-items:flex-end;gap:7px;height:110px;padding:12px;background:#fff;border:1px solid #E6E9EE;border-radius:12px}
+.bars i{flex:1;background:#21C3E0;border-radius:5px 5px 0 0;display:block}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <b>Barbearia Oliveira Alves · direções visuais</b>
+  <button class="tab" data-t="A" aria-selected="true">A · Neon Barber</button>
+  <button class="tab" data-t="B" aria-selected="false">B · Premium Fade</button>
+  <button class="tab" data-t="C" aria-selected="false">C · Modern Utility</button>
+</div>
+
+<div class="wrap">
+
+<!-- ================= A ================= -->
+<section data-p="A">
+  <div class="dirhead">
+    <h2>A · Neon Barber</h2>
+    <p>Leitura mais literal da logo: preto absoluto, ciano em neon com brilho, tipografia condensada em caixa alta (Anton/Bebas). Energia de barbearia urbana, alto contraste, muito "Instagram". Risco: neon em excesso cansa e envelhece rápido.</p>
+    <div class="chips">
+      <span class="chip"><i class="sw" style="background:#000"></i>#000000 fundo</span>
+      <span class="chip"><i class="sw" style="background:#21C3E0"></i>#21C3E0 ciano</span>
+      <span class="chip"><i class="sw" style="background:#0b0d0f"></i>#0B0D0F superfície</span>
+      <span class="chip">Anton + Inter</span>
+      <span class="chip">raio 6px</span>
+    </div>
+  </div>
+
+  <div class="label">Landing — hero</div>
+  <div class="frame A">
+    <div class="hero">
+      <div class="row" style="margin-bottom:26px"><img src="logo.jpg" class="logo" alt=""></div>
+      <div class="kicker">Rua das Palmeiras, 320 · Seg–Sáb</div>
+      <h1>Corte no<br>horário. <em>Sem fila.</em></h1>
+      <p class="sub">Escolha serviço, profissional e horário. Pagamento na hora garante sua vaga na cadeira.</p>
+      <button class="cta">Agendar agora ›</button>
+      <button class="ghost">Ver serviços</button>
+    </div>
+    <div class="strip">
+      <div><b>4.9 ★</b><span>240 avaliações</span></div>
+      <div><b>3</b><span>Profissionais</span></div>
+      <div><b>30 min</b><span>Corte médio</span></div>
+      <div><b>Pix</b><span>Confirmação imediata</span></div>
+    </div>
+  </div>
+
+  <div class="label">Wizard — passo 1 (serviço) e passo 3 (data/hora)</div>
+  <div class="grid2">
+    <div class="frame A" style="padding:22px">
+      <div class="steps"><i class="on"></i><i></i><i></i><i></i></div>
+      <div class="kicker">Passo 1 de 4</div>
+      <h1 style="font-size:30px;margin:8px 0 18px">Escolha o serviço</h1>
+      <div class="svc on"><div><h4>Corte masculino</h4><small>30 min</small></div><div class="p">R$ 45</div></div>
+      <div class="svc"><div><h4>Corte + barba</h4><small>55 min</small></div><div class="p">R$ 75</div></div>
+      <div class="svc"><div><h4>Barba terapia</h4><small>25 min</small></div><div class="p">R$ 35</div></div>
+      <div class="foot"><span class="mut" style="font-size:13px">Corte masculino · 30 min</span><b style="font-family:Bebas Neue;font-size:24px;color:#21C3E0">R$ 45</b></div>
+    </div>
+    <div class="frame A" style="padding:22px">
+      <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+      <div class="kicker">Passo 3 de 4</div>
+      <h1 style="font-size:30px;margin:8px 0 14px">Data e horário</h1>
+      <div class="card" style="padding:14px">
+        <div class="row" style="justify-content:space-between"><b style="font-family:Bebas Neue;font-size:19px;letter-spacing:.05em">AGOSTO 2026</b><span class="mut">‹ ›</span></div>
+        <div class="cal">
+          <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+          <a class="dim">2</a><a>3</a><a>4</a><a class="sel">5</a><a>6</a><a>7</a><a>8</a>
+          <a class="dim">9</a><a>10</a><a>11</a><a>12</a><a>13</a><a>14</a><a>15</a>
+        </div>
+      </div>
+      <div class="slots">
+        <div class="slot off">09:00</div><div class="slot">09:30</div><div class="slot">10:00</div><div class="slot off">10:30</div>
+        <div class="slot on">14:00</div><div class="slot">14:30</div><div class="slot">15:00</div><div class="slot">15:30</div>
+      </div>
+      <button class="cta" style="width:100%;justify-content:center;margin-top:18px">Continuar ›</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= B ================= -->
+<section data-p="B" hidden>
+  <div class="dirhead">
+    <h2>B · Premium Fade</h2>
+    <p>Barbearia como serviço caro, não como balada. Carvão em vez de preto puro, ciano usado com parcimônia (só em acento e estado ativo), serifada editorial (Fraunces) e muito espaço em branco. Envelhece melhor e passa ticket alto. Risco: menos "cara de logo".</p>
+    <div class="chips">
+      <span class="chip"><i class="sw" style="background:#0E1113"></i>#0E1113 fundo</span>
+      <span class="chip"><i class="sw" style="background:#151A1D"></i>#151A1D superfície</span>
+      <span class="chip"><i class="sw" style="background:#21C3E0"></i>#21C3E0 acento</span>
+      <span class="chip"><i class="sw" style="background:#F2F0EC"></i>#F2F0EC tinta</span>
+      <span class="chip">Fraunces + Inter</span>
+      <span class="chip">raio 2px</span>
+    </div>
+  </div>
+
+  <div class="label">Landing — hero</div>
+  <div class="frame B">
+    <div class="hero">
+      <div>
+        <img src="logo.jpg" class="logo" alt="" style="border-radius:2px;margin-bottom:24px">
+        <div class="rule">Desde 2019 · Rua das Palmeiras, 320</div>
+        <h1>O corte certo,<br>na hora <em>exata</em>.</h1>
+        <p class="sub">Agenda online, pagamento antecipado e seu horário garantido. Sem espera, sem lista, sem WhatsApp perdido.</p>
+        <button class="cta">Agendar horário</button>
+        <button class="ghost">Serviços e preços</button>
+      </div>
+      <div class="plate"><img src="logo.jpg" alt="" style="width:100%;border-radius:2px"></div>
+    </div>
+  </div>
+
+  <div class="label">Wizard — passo 1 (serviço) e passo 3 (data/hora)</div>
+  <div class="grid2">
+    <div class="frame B" style="padding:26px">
+      <div class="steps"><span class="on">01 Serviço</span><span>02 Profissional</span><span>03 Horário</span><span>04 Pagamento</span></div>
+      <h1 style="font-size:28px;margin:0 0 6px">Escolha o serviço</h1>
+      <p class="sub" style="margin:0 0 10px;font-size:14px">Duração e valor já incluídos.</p>
+      <div class="svc on"><div><h4>Corte masculino</h4><small>30 minutos</small></div><div class="p">R$ 45</div></div>
+      <div class="svc"><div><h4>Corte + barba</h4><small>55 minutos</small></div><div class="p">R$ 75</div></div>
+      <div class="svc"><div><h4>Barba terapia</h4><small>25 minutos</small></div><div class="p">R$ 35</div></div>
+      <div class="foot"><span class="mut" style="font-size:13px">Corte masculino · 30 min</span><b style="font-family:Fraunces,serif;font-size:20px;color:#21C3E0">R$ 45</b></div>
+    </div>
+    <div class="frame B" style="padding:26px">
+      <div class="steps"><span class="on">01</span><span class="on">02</span><span class="on">03 Horário</span><span>04</span></div>
+      <h1 style="font-size:28px;margin:0 0 12px">Data e horário</h1>
+      <div class="card" style="padding:14px">
+        <div class="row" style="justify-content:space-between"><b style="font-family:Fraunces,serif;font-size:17px">Agosto 2026</b><span class="mut">‹ ›</span></div>
+        <div class="cal">
+          <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+          <a class="dim">2</a><a>3</a><a>4</a><a class="sel" style="border-radius:2px">5</a><a>6</a><a>7</a><a>8</a>
+          <a class="dim">9</a><a>10</a><a>11</a><a>12</a><a>13</a><a>14</a><a>15</a>
+        </div>
+      </div>
+      <div class="slots">
+        <div class="slot off">09:00</div><div class="slot">09:30</div><div class="slot">10:00</div><div class="slot off">10:30</div>
+        <div class="slot on">14:00</div><div class="slot">14:30</div><div class="slot">15:00</div><div class="slot">15:30</div>
+      </div>
+      <button class="cta" style="width:100%;margin-top:18px">Continuar</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= C ================= -->
+<section data-p="C" hidden>
+  <div class="dirhead">
+    <h2>C · Modern Utility</h2>
+    <p>Cara de produto digital bem-feito: azul-petróleo profundo, ciano vivo, cantos generosos, Space Grotesk. Prioriza conversão e clareza do estado (livre / ocupado / selecionado). Melhor casamento com shadcn — quase zero briga com os defaults. Risco: menos "alma de barbearia", mais SaaS.</p>
+    <div class="chips">
+      <span class="chip"><i class="sw" style="background:#0A0F14"></i>#0A0F14 fundo</span>
+      <span class="chip"><i class="sw" style="background:#111820"></i>#111820 card</span>
+      <span class="chip"><i class="sw" style="background:#16202A"></i>#16202A elevado</span>
+      <span class="chip"><i class="sw" style="background:#21C3E0"></i>#21C3E0 primária</span>
+      <span class="chip">Space Grotesk + Inter</span>
+      <span class="chip">raio 12–18px</span>
+    </div>
+  </div>
+
+  <div class="label">Landing — hero</div>
+  <div class="frame C">
+    <div class="hero">
+      <div class="row" style="margin-bottom:22px"><img src="logo.jpg" class="logo" style="border-radius:12px" alt=""></div>
+      <span class="pill">● 4 horários livres hoje</span>
+      <h1>Agende seu corte<br>em <span>40 segundos</span>.</h1>
+      <p class="sub">Escolha o profissional, veja os horários livres em tempo real e pague por Pix. O horário é seu no instante da confirmação.</p>
+      <button class="cta">Agendar agora</button>
+      <button class="ghost">Ver preços</button>
+    </div>
+  </div>
+
+  <div class="label">Wizard — passo 1 (serviço) e passo 3 (data/hora)</div>
+  <div class="grid2">
+    <div class="frame C" style="padding:22px">
+      <div class="steps"><b class="on">1</b><b>2</b><b>3</b><b>4</b></div>
+      <h1 style="font-size:26px;margin:0 0 4px">Qual serviço?</h1>
+      <p class="sub" style="margin:0 0 14px;font-size:14px">Você paga o valor cheio agora e garante a cadeira.</p>
+      <div class="svc on"><div><h4>Corte masculino</h4><small>30 min</small></div><div class="p">R$ 45</div></div>
+      <div class="svc"><div><h4>Corte + barba</h4><small>55 min</small></div><div class="p">R$ 75</div></div>
+      <div class="svc"><div><h4>Barba terapia</h4><small>25 min</small></div><div class="p">R$ 35</div></div>
+      <div class="foot"><span class="mut" style="font-size:13px">Corte masculino · 30 min</span><b style="font:700 18px Space Grotesk;color:#21C3E0">R$ 45</b></div>
+    </div>
+    <div class="frame C" style="padding:22px">
+      <div class="steps"><b class="on">1</b><b class="on">2</b><b class="on">3</b><b>4</b></div>
+      <h1 style="font-size:26px;margin:0 0 12px">Quando?</h1>
+      <div class="card" style="padding:14px;border-radius:14px">
+        <div class="row" style="justify-content:space-between"><b style="font:600 15px Space Grotesk">Agosto 2026</b><span class="mut">‹ ›</span></div>
+        <div class="cal">
+          <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+          <a class="dim">2</a><a>3</a><a>4</a><a class="sel" style="border-radius:10px">5</a><a>6</a><a>7</a><a>8</a>
+          <a class="dim">9</a><a>10</a><a>11</a><a>12</a><a>13</a><a>14</a><a>15</a>
+        </div>
+      </div>
+      <div class="slots">
+        <div class="slot off">09:00</div><div class="slot">09:30</div><div class="slot">10:00</div><div class="slot off">10:30</div>
+        <div class="slot on">14:00</div><div class="slot">14:30</div><div class="slot">15:00</div><div class="slot">15:30</div>
+      </div>
+      <button class="cta" style="width:100%;margin-top:18px">Ir para pagamento</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ADMIN (comum) ================= -->
+<div class="label">Painel do barbeiro — light (igual nas 3 direções, só muda a cor de acento)</div>
+<div class="frame adm">
+  <div class="top"><img src="logo.jpg" style="height:26px;border-radius:4px" alt=""><b>PAINEL</b>
+    <span style="margin-left:auto;font:500 12.5px Inter;color:#94A3B8">Hoje · 05 ago 2026 · Ricardo (owner)</span></div>
+  <div class="body">
+    <div class="side">
+      <a class="on">Agenda</a><a>Dashboard</a><a>Clientes</a><a>Serviços</a><a>Horários</a><a>Barbeiros</a>
+    </div>
+    <div class="main">
+      <div class="kpis">
+        <div class="kpi"><span>Receita 30d</span><b>R$ 8.420</b><i>+12% vs. anterior</i></div>
+        <div class="kpi"><span>Agendamentos</span><b>187</b><i>+8%</i></div>
+        <div class="kpi"><span>No-show</span><b>6,4%</b><i style="color:#B42318">+1,2pp</i></div>
+        <div class="kpi"><span>Clientes em risco</span><b>23</b><i style="color:#96690B">sem voltar 45d+</i></div>
+      </div>
+      <div class="bars"><i style="height:40%"></i><i style="height:62%"></i><i style="height:48%"></i><i style="height:78%"></i><i style="height:66%"></i><i style="height:92%"></i><i style="height:55%"></i><i style="height:71%"></i><i style="height:84%"></i><i style="height:60%"></i><i style="height:96%"></i><i style="height:74%"></i></div>
+      <table>
+        <tr><th>Hora</th><th>Cliente</th><th>Serviço</th><th>Barbeiro</th><th>Status</th><th></th></tr>
+        <tr><td>09:00</td><td>João Pedro</td><td>Corte + barba</td><td>Ricardo</td><td><span class="badge bg-vindo">Compareceu</span></td><td></td></tr>
+        <tr><td>10:00</td><td>Marcos Lima</td><td>Corte</td><td>Alan</td><td><span class="badge bg-conf">Confirmado</span></td><td><button class="btn pri">Compareceu</button> <button class="btn">Faltou</button></td></tr>
+        <tr><td>10:30</td><td>Diego Alves</td><td>Barba</td><td>Ricardo</td><td><span class="badge bg-pend">Aguardando pgto · 6min</span></td><td></td></tr>
+        <tr><td>11:00</td><td>Rafael S.</td><td>Corte</td><td>Alan</td><td><span class="badge bg-canc">Cancelado</span></td><td></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+document.querySelectorAll('.tab').forEach(function(t){
+  t.onclick=function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.setAttribute('aria-selected',x===t)});
+    document.querySelectorAll('[data-p]').forEach(function(s){s.hidden=s.dataset.p!==t.dataset.t});
+    window.scrollTo(0,0);
+  };
+});
+</script>
+</body>
+</html>
