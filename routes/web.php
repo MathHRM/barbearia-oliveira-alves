@@ -6,7 +6,6 @@ use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\BookingController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', [BookingController::class, 'index'])->name('home');
 Route::get('api/availability', [AvailabilityController::class, 'index'])->name('availability');
@@ -21,11 +20,9 @@ Route::post('webhooks/asaas', AsaasWebhookController::class)
     ->withoutMiddleware([ValidateCsrfToken::class])
     ->name('webhooks.asaas');
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-});
+// o starter kit manda para `dashboard` depois do login; no painel, a porta de entrada é a agenda
+Route::redirect('dashboard', '/painel/agenda')->middleware('auth')->name('dashboard');
 
+require __DIR__.'/painel.php';
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

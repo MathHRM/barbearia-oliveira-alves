@@ -44,6 +44,11 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
+                'is_owner' => (bool) $request->user()?->isOwner(),
+            ],
+            // mensagens curtas de ação do painel ("Marcado como compareceu.")
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
             ],
         ]);
     }

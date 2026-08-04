@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -31,6 +32,18 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /** Dono: agenda de todos, faturamento e cadastros. */
+    public function owner(): static
+    {
+        return $this->state(['role' => UserRole::Owner]);
+    }
+
+    /** Barbeiro: só a própria agenda. */
+    public function barber(): static
+    {
+        return $this->state(['role' => UserRole::Barber]);
     }
 
     /**
