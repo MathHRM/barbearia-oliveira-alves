@@ -177,8 +177,10 @@ Login e-mail+senha (`/painel/login`). Sem cadastro público. Tema **dark**, igua
 ### Agenda do dia (tela padrão)
 Linha por agendamento: hora · cliente (+ meta: nº de visitas, forma de pagamento) ·
 serviço · badge de status · ações `Compareceu` / `Cancelar`.
+`Compareceu`/`Faltou` só aparecem depois do horário começar (o backend recusa antes disso);
+quem já está marcado como falta só recebe `Compareceu`, para corrigir.
 Navegação ‹ Ontem / Amanhã ›. Cabeçalho com contagem, receita prevista e horários livres.
-Lateral: "Hoje em números" (confirmados, compareceram, cancelados, recebido) e
+Lateral: "Hoje/Amanhã/Ontem/dd/mm/aaaa em números" (confirmados, compareceram, cancelados, recebido) e
 "Bloquear horário" (cria `time_block`; some da agenda pública na hora).
 `barber` vê só as próprias linhas; `owner` vê todas com filtro por profissional.
 

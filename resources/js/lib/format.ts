@@ -59,6 +59,30 @@ export function dayParts(date: string): { weekday: string; day: string; month: s
     };
 }
 
+/** "Hoje" / "Amanhã" / "Ontem" / "05/09/2026" — `today` vem do servidor, no fuso da barbearia. */
+export function relativeDay(date: string, today: string): string {
+    const shifted = (days: number) => {
+        const moment = fromIsoDate(today);
+        moment.setDate(moment.getDate() + days);
+
+        return isoDate(moment);
+    };
+
+    if (date === today) {
+        return 'Hoje';
+    }
+
+    if (date === shifted(1)) {
+        return 'Amanhã';
+    }
+
+    if (date === shifted(-1)) {
+        return 'Ontem';
+    }
+
+    return fromIsoDate(date).toLocaleDateString('pt-BR');
+}
+
 export function longDate(date: string): string {
     return fromIsoDate(date).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
 }

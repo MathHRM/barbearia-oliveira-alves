@@ -41,6 +41,10 @@ class AppointmentController extends Controller
     {
         $this->authorizeManage($request, $appointment);
 
+        if ($appointment->starts_at->isFuture()) {
+            return back()->with('error', 'Esse horário ainda não chegou.');
+        }
+
         $appointment->update(['status' => AppointmentStatus::Attended, 'attended_at' => now()]);
         $appointment->customer->update(['last_visit_at' => $appointment->starts_at]);
 
@@ -50,6 +54,10 @@ class AppointmentController extends Controller
     public function noShow(Request $request, Appointment $appointment): RedirectResponse
     {
         $this->authorizeManage($request, $appointment);
+
+        if ($appointment->starts_at->isFuture()) {
+            return back()->with('error', 'Esse horário ainda não chegou.');
+        }
 
         $appointment->update(['status' => AppointmentStatus::NoShow, 'attended_at' => null]);
 

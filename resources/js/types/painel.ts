@@ -26,6 +26,7 @@ export interface AgendaRow {
     payment: { billing_type: string; status: string; refundable: boolean } | null;
     paid: boolean;
     can_attend: boolean;
+    can_no_show: boolean;
     can_cancel: boolean;
 }
 

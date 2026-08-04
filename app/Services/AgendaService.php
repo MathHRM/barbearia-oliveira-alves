@@ -133,7 +133,11 @@ class AgendaService
             ],
             'paid' => $payment?->status === PaymentStatus::Confirmed
                 || ($payment === null && $appointment->status === AppointmentStatus::Attended),
-            'can_attend' => in_array($appointment->status, [AppointmentStatus::Confirmed, AppointmentStatus::NoShow], true),
+            // presença/falta só depois do horário começar — ninguém compareceu a algo que não aconteceu
+            'can_attend' => $appointment->starts_at->isPast()
+                && in_array($appointment->status, [AppointmentStatus::Confirmed, AppointmentStatus::NoShow], true),
+            'can_no_show' => $appointment->starts_at->isPast()
+                && $appointment->status === AppointmentStatus::Confirmed,
             'can_cancel' => in_array($appointment->status, AppointmentStatus::blocking(), true),
         ];
     }

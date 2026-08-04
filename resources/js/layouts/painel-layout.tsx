@@ -28,7 +28,10 @@ interface Props {
 }
 
 export function PainelLayout({ title, subtitle, actions, children }: Props) {
-    const page = usePage<{ auth: { user: { name: string; email: string } | null; is_owner: boolean }; flash: { success: string | null } }>();
+    const page = usePage<{
+        auth: { user: { name: string; email: string } | null; is_owner: boolean };
+        flash: { success: string | null; error: string | null };
+    }>();
     const { auth } = page.props;
     const items = NAV.filter((item) => !item.ownerOnly || auth.is_owner);
     const current = page.url.split('?')[0];
@@ -94,13 +97,13 @@ export function PainelLayout({ title, subtitle, actions, children }: Props) {
                 <div className="px-4 py-6 md:px-8">{children}</div>
             </main>
 
-            <Toast message={page.props.flash?.success ?? null} />
+            <Toast message={page.props.flash?.error ?? page.props.flash?.success ?? null} tone={page.props.flash?.error ? 'danger' : 'success'} />
         </div>
     );
 }
 
 /** Confirmação curta das ações do painel; some sozinha em 3s. */
-function Toast({ message }: { message: string | null }) {
+function Toast({ message, tone }: { message: string | null; tone: 'success' | 'danger' }) {
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
@@ -119,7 +122,12 @@ function Toast({ message }: { message: string | null }) {
     }
 
     return (
-        <div className="border-success/40 bg-success/10 text-success fixed right-4 bottom-4 z-50 rounded-xl border px-4 py-2 text-sm shadow-lg">
+        <div
+            className={cn(
+                'fixed right-4 bottom-4 z-50 rounded-xl border px-4 py-2 text-sm shadow-lg',
+                tone === 'danger' ? 'border-destructive/40 bg-destructive/10 text-destructive' : 'border-success/40 bg-success/10 text-success',
+            )}
+        >
             {message}
         </div>
     );

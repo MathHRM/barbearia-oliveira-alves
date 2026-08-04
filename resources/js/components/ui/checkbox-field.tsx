@@ -34,7 +34,7 @@ export function CheckboxField({ checked, onChange, label, description, error, di
                     checked={checked}
                     disabled={disabled}
                     onCheckedChange={(state) => onChange(state === true)}
-                    className="mt-0.5 size-4"
+                    className="mt-px size-[1.125rem]"
                 />
                 <span className="min-w-0">
                     <span className="block leading-snug">{label}</span>

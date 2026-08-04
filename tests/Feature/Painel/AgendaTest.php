@@ -112,6 +112,7 @@ class AgendaTest extends TestCase
     {
         $barber = $this->barber();
         $appointment = Appointment::factory()->for($barber)->at($this->at('10:00'))->create();
+        Carbon::setTestNow($this->at('10:30'));
 
         $this->actingAs($this->owner())
             ->post("/painel/agendamentos/{$appointment->id}/compareceu")
@@ -124,10 +125,49 @@ class AgendaTest extends TestCase
     public function test_marca_falta(): void
     {
         $appointment = Appointment::factory()->for($this->barber())->at($this->at('10:00'))->create();
+        Carbon::setTestNow($this->at('10:30'));
 
         $this->actingAs($this->owner())->post("/painel/agendamentos/{$appointment->id}/faltou");
 
         $this->assertSame(AppointmentStatus::NoShow, $appointment->refresh()->status);
+    }
+
+    public function test_nao_marca_comparecimento_antes_da_hora(): void
+    {
+        $appointment = Appointment::factory()->for($this->barber())->at($this->at('10:00'))->create();
+
+        $this->actingAs($this->owner())
+            ->post("/painel/agendamentos/{$appointment->id}/compareceu")
+            ->assertSessionHas('error', 'Esse horário ainda não chegou.');
+
+        $this->assertSame(AppointmentStatus::Confirmed, $appointment->refresh()->status);
+    }
+
+    public function test_agenda_esconde_os_botoes_de_presenca_no_futuro(): void
+    {
+        Appointment::factory()->for($this->barber())->at($this->at('10:00'))->create();
+
+        $this->actingAs($this->owner())
+            ->get('/painel/agenda?date=2026-09-02')
+            ->assertInertia(fn ($page) => $page
+                ->where('rows.0.can_attend', false)
+                ->where('rows.0.can_no_show', false));
+    }
+
+    public function test_falta_ja_marcada_nao_oferece_faltou_de_novo(): void
+    {
+        Appointment::factory()
+            ->for($this->barber())
+            ->at($this->at('10:00'))
+            ->create(['status' => AppointmentStatus::NoShow]);
+
+        Carbon::setTestNow($this->at('10:30'));
+
+        $this->actingAs($this->owner())
+            ->get('/painel/agenda?date=2026-09-02')
+            ->assertInertia(fn ($page) => $page
+                ->where('rows.0.can_attend', true)
+                ->where('rows.0.can_no_show', false));
     }
 
     public function test_barbeiro_nao_mexe_em_agendamento_alheio(): void

@@ -7,7 +7,7 @@ import { CheckboxField } from '@/components/ui/checkbox-field';
 import { DateInput, TimeInput } from '@/components/ui/date-time-input';
 import { Input } from '@/components/ui/input';
 import { PainelLayout } from '@/layouts/painel-layout';
-import { brl, longDate } from '@/lib/format';
+import { brl, longDate, relativeDay } from '@/lib/format';
 import type { AgendaBlock, AgendaRow, AgendaTotals, PainelBarber, PainelService } from '@/types/painel';
 import { Head, router, useForm } from '@inertiajs/react';
 import { CalendarOff, Check, ChevronLeft, ChevronRight, Trash2, X } from 'lucide-react';
@@ -85,7 +85,7 @@ export default function Agenda({ date, prev, next, today, barberId, barbers, row
 
                 <aside className="space-y-6">
                     <section className="space-y-3">
-                        <p className="eyebrow">Hoje em números</p>
+                        <p className="eyebrow">{relativeDay(date, today)} em números</p>
                         <div className="grid grid-cols-2 gap-3">
                             <StatCard label="Agendados" value={String(totals.confirmed + totals.pending)} />
                             <StatCard label="Compareceram" value={String(totals.attended)} />
@@ -141,14 +141,14 @@ function Row({ row, showBarber, onCancel }: { row: AgendaRow; showBarber: boolea
 
             <div className="flex gap-2">
                 {row.can_attend && (
-                    <>
-                        <Button size="sm" variant="outline" onClick={() => act('compareceu')}>
-                            <Check className="size-4" /> Compareceu
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => act('faltou')}>
-                            <X className="size-4" /> Faltou
-                        </Button>
-                    </>
+                    <Button size="sm" variant="outline" onClick={() => act('compareceu')}>
+                        <Check className="size-4" /> Compareceu
+                    </Button>
+                )}
+                {row.can_no_show && (
+                    <Button size="sm" variant="ghost" onClick={() => act('faltou')}>
+                        <X className="size-4" /> Faltou
+                    </Button>
                 )}
                 {row.can_cancel && (
                     <Button size="sm" variant="ghost" className="text-destructive" onClick={onCancel}>
@@ -215,19 +215,24 @@ function BlockPanel({
                 </select>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
-                <DateInput label={range ? 'Do dia' : 'Dia'} value={data.date} onChange={(value) => setData('date', value)} error={errors.date} />
-                {range && (
-                    <DateInput
-                        label="Até o dia"
-                        min={data.date}
-                        value={data.until}
-                        onChange={(value) => setData('until', value)}
-                        error={errors.until}
-                    />
-                )}
-                <TimeInput label="Das" value={data.starts} onChange={(value) => setData('starts', value)} error={errors.starts} />
-                <TimeInput label="Às" value={data.ends} onChange={(value) => setData('ends', value)} error={errors.ends} />
+            {/* dias em uma linha, horas em outra — o par nunca fica quebrado entre linhas */}
+            <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                    <DateInput label={range ? 'Do dia' : 'Dia'} value={data.date} onChange={(value) => setData('date', value)} error={errors.date} />
+                    {range && (
+                        <DateInput
+                            label="Até o dia"
+                            min={data.date}
+                            value={data.until}
+                            onChange={(value) => setData('until', value)}
+                            error={errors.until}
+                        />
+                    )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                    <TimeInput label="Das" value={data.starts} onChange={(value) => setData('starts', value)} error={errors.starts} />
+                    <TimeInput label="Às" value={data.ends} onChange={(value) => setData('ends', value)} error={errors.ends} />
+                </div>
             </div>
 
             <CheckboxField

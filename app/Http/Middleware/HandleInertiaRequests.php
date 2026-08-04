@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
             // mensagens curtas de ação do painel ("Marcado como compareceu.")
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
             ],
         ]);
     }
