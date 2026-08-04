@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'name' => env('BARBEARIA_NAME', 'Barbearia Oliveira Alves'),
+
+    // endereço exibido na confirmação e no .ics
+    'address' => env('BARBEARIA_ADDRESS', 'Rua das Palmeiras, 214 · Centro'),
+
     // Fuso da barbearia. O app roda em UTC (grava timestamptz sem ambiguidade);
     // grade de horários, agenda e exibição usam este fuso.
     'timezone' => env('BARBEARIA_TZ', 'America/Sao_Paulo'),
