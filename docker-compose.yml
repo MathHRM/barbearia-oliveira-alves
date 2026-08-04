@@ -1,0 +1,89 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    container_name: barbearia_app
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - .:/app
+      - caddy_data:/data
+    ports:
+      - "8010:8000"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  vite:
+    image: node:20-alpine
+    container_name: barbearia_vite
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "5183:5173"
+    command: sh -c "[ -d node_modules ] || npm ci; npm run dev -- --host 0.0.0.0"
+
+  queue:
+    build:
+      context: .
+      target: dev
+    container_name: barbearia_queue
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - .:/app
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      RUN_MIGRATIONS: "0"
+    command: php artisan queue:work --tries=3 --sleep=1
+    depends_on:
+      app:
+        condition: service_started
+
+  scheduler:
+    build:
+      context: .
+      target: dev
+    container_name: barbearia_scheduler
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - .:/app
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      RUN_MIGRATIONS: "0"
+    command: php artisan schedule:work
+    depends_on:
+      app:
+        condition: service_started
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: barbearia_pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: barbearia
+      POSTGRES_USER: barbearia
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U barbearia -d barbearia"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
+  caddy_data:
