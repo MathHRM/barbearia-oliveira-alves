@@ -277,15 +277,20 @@ POST /webhooks/asaas
 
 ### Painel (`auth`, prefixo `/painel`)
 ```
-GET|POST /painel/login   ·   POST /painel/logout
+GET  /painel/login                  mesma tela de /login · POST /login · POST /logout
 GET  /painel/agenda                 ?date=&barber_id=
-POST /painel/agendamentos/{id}/compareceu | /faltou | /cancelar
 POST /painel/agendamentos           criação manual (balcão)
-GET  /painel/dashboard              ?range=30d|90d|12m
-CRUD /painel/servicos   ·   /painel/horarios   ·   /painel/bloqueios
-GET  /painel/clientes               ?q=
-CRUD /painel/barbeiros              (owner)
+POST /painel/agendamentos/{id}/compareceu | /faltou | /cancelar
+POST /painel/bloqueios   ·   DELETE /painel/bloqueios/{id}
+GET  /painel/clientes               ?q=  (busca por nome ou telefone)
+GET  /painel/horarios   ·   PUT /painel/horarios/{barber}   grade semanal
+GET  /painel/dashboard              ?range=30d|90d|12m       (owner)
+GET|POST /painel/servicos   ·   PUT|DELETE /painel/servicos/{id}   (owner)
+GET|POST /painel/barbeiros  ·   PUT /painel/barbeiros/{id}         (owner)
 ```
+
+Sem cadastro público: o dono cria os barbeiros e a senha pelo painel. Usuário
+com `active = false` não passa do login.
 
 ---
 
