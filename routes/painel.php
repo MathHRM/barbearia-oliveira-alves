@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Painel\AgendaController;
 use App\Http\Controllers\Painel\AppointmentController;
+use App\Http\Controllers\Painel\DashboardController;
 use App\Http\Controllers\Painel\TimeBlockController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,4 +18,9 @@ Route::middleware(['auth'])->prefix('painel')->name('painel.')->group(function (
 
     Route::post('bloqueios', [TimeBlockController::class, 'store'])->name('blocks.store');
     Route::delete('bloqueios/{block}', [TimeBlockController::class, 'destroy'])->name('blocks.destroy');
+
+    // faturamento é assunto do dono
+    Route::middleware('owner')->group(function () {
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    });
 });

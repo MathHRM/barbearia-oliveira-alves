@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureOwner;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        $middleware->alias(['owner' => EnsureOwner::class]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
