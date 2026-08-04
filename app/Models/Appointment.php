@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\UtcDateTime;
 use App\Enums\AppointmentOrigin;
 use App\Enums\AppointmentStatus;
 use Illuminate\Database\Eloquent\Builder;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 class Appointment extends Model
 {
@@ -25,12 +27,12 @@ class Appointment extends Model
     protected function casts(): array
     {
         return [
-            'starts_at' => 'datetime',
-            'ends_at' => 'datetime',
-            'reserved_until' => 'datetime',
-            'confirmed_at' => 'datetime',
-            'attended_at' => 'datetime',
-            'canceled_at' => 'datetime',
+            'starts_at' => UtcDateTime::class,
+            'ends_at' => UtcDateTime::class,
+            'reserved_until' => UtcDateTime::class,
+            'confirmed_at' => UtcDateTime::class,
+            'attended_at' => UtcDateTime::class,
+            'canceled_at' => UtcDateTime::class,
             'status' => AppointmentStatus::class,
             'origin' => AppointmentOrigin::class,
             'price_cents' => 'integer',
@@ -41,7 +43,7 @@ class Appointment extends Model
     protected static function booted(): void
     {
         static::creating(function (self $appointment) {
-            $appointment->public_token ??= (string) \Illuminate\Support\Str::uuid();
+            $appointment->public_token ??= (string) Str::uuid();
         });
     }
 

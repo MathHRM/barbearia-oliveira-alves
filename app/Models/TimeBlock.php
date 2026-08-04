@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\UtcDateTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ class TimeBlock extends Model
 
     protected function casts(): array
     {
-        return ['starts_at' => 'datetime', 'ends_at' => 'datetime'];
+        return ['starts_at' => UtcDateTime::class, 'ends_at' => UtcDateTime::class];
     }
 
     public function barber(): BelongsTo

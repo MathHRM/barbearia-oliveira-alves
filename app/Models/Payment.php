@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\UtcDateTime;
 use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,8 +22,8 @@ class Payment extends Model
     {
         return [
             'status' => PaymentStatus::class,
-            'paid_at' => 'datetime',
-            'refunded_at' => 'datetime',
+            'paid_at' => UtcDateTime::class,
+            'refunded_at' => UtcDateTime::class,
             'amount_cents' => 'integer',
             'raw' => 'array',
         ];

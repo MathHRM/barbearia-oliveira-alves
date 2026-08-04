@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\UtcDateTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,7 +18,7 @@ class Customer extends Model
 
     protected function casts(): array
     {
-        return ['first_seen_at' => 'datetime', 'last_visit_at' => 'datetime'];
+        return ['first_seen_at' => UtcDateTime::class, 'last_visit_at' => UtcDateTime::class];
     }
 
     public function appointments(): HasMany

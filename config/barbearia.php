@@ -1,6 +1,10 @@
 <?php
 
 return [
+    // Fuso da barbearia. O app roda em UTC (grava timestamptz sem ambiguidade);
+    // grade de horários, agenda e exibição usam este fuso.
+    'timezone' => env('BARBEARIA_TZ', 'America/Sao_Paulo'),
+
     // minutos que o slot fica preso enquanto o pagamento não volta aprovado
     'reservation_ttl_min' => (int) env('BARBEARIA_RESERVATION_TTL_MIN', 10),
 

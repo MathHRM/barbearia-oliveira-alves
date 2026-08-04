@@ -9,6 +9,7 @@ use App\Models\Barber;
 use App\Models\Customer;
 use App\Models\Service;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Carbon;
 
 /** @extends Factory<Appointment> */
 class AppointmentFactory extends Factory
@@ -37,7 +38,7 @@ class AppointmentFactory extends Factory
     /** Coloca o agendamento num horário específico, ajustando o fim pela duração. */
     public function at(\DateTimeInterface|string $starts, int $durationMin = 30): static
     {
-        $starts = \Illuminate\Support\Carbon::parse($starts);
+        $starts = Carbon::parse($starts);
 
         return $this->state([
             'starts_at' => $starts,

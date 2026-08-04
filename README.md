@@ -80,7 +80,26 @@ Além do padrão do Laravel:
 | `BARBEARIA_SLOT_STEP_MIN` | `15` | granularidade dos horários |
 | `BARBEARIA_CHURN_DAYS` | `60` | dias sem voltar para o cliente contar como perdido |
 
-`APP_TIMEZONE` é `America/Sao_Paulo`; o banco guarda tudo em UTC (`timestamptz`).
+### Fuso horário
+
+O app roda em **UTC** (`APP_TIMEZONE=UTC`) e o banco guarda `timestamptz` em UTC.
+O fuso da barbearia fica em `BARBEARIA_TZ` (`America/Sao_Paulo`) e vale para
+grade de horários, agenda e exibição.
+
+Motivo: o Eloquent formata datas sem offset ao gravar, então um `Carbon` em
+`-03:00` chegaria ao Postgres como se fosse UTC. As colunas de horário usam o
+cast `App\Casts\UtcDateTime`, que converte explicitamente nas duas pontas, e as
+janelas de consulta são convertidas para UTC antes de virar binding de query.
+
+### Testes
+
+Rodam contra Postgres de verdade (a exclusividade de slot depende de
+`btree_gist`/`EXCLUDE`), no banco `barbearia_test`. Crie uma vez:
+
+```bash
+docker compose exec postgres psql -U barbearia -d postgres -c "CREATE DATABASE barbearia_test OWNER barbearia"
+docker compose exec app php artisan test
+```
 
 ### Webhook do Asaas em desenvolvimento
 
