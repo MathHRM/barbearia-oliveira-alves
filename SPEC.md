@@ -135,8 +135,12 @@ Slots são calculados on-the-fly. **Não há tabela de slots.**
   Implementado na variante **A: cards largos** — um card por horário, mostrando o
   barbeiro quando o cliente escolheu "tanto faz".
 - **04** Nome, WhatsApp, **CPF**, e-mail, observação opcional. `upsert` em `customers` por telefone.
-  O CPF é obrigatório porque o Asaas exige `cpfCnpj` para criar o cliente da cobrança.
+  O CPF é obrigatório **também no Pix**: toda cobrança do Asaas exige um `customer`, e
+  `POST /v3/customers` exige `cpfCnpj`. Não há caminho de Pix sem CPF.
 - **05** Resumo + Pix (QR + copia-e-cola, confirmação em segundos) ou cartão (até 2x).
+  Juros/taxa do parcelamento ficam com **o estabelecimento**: a cobrança é criada com o
+  valor cheio do serviço, sem `installmentValue` de repasse, e o cliente parcela na fatura
+  hospedada pagando o mesmo total.
 - **06** Confirmação com código `#OA-XXXX`, botão de calendário (.ics) e endereço.
 
 ### Sequência de pagamento
@@ -302,9 +306,9 @@ CRUD /painel/barbeiros              (owner)
 ## Questões em aberto
 
 1. ~~Variante de horários~~ — decidido: A (cards largos).
-2. Cartão em 2x — quem paga os juros/taxa? Asaas parcela com repasse ao cliente?
+2. ~~Cartão em 2x — quem paga os juros/taxa?~~ — decidido: o estabelecimento absorve.
 3. Antecedência mínima 60 min confere? Barbearia aceita agendar pra daqui 20 min?
 4. Nome/CPF-CNPJ da conta Asaas e chave de API — quem provisiona?
 5. Domínio final e remetente de e-mail (SPF/DKIM).
-6. Endereço real da barbearia (`BARBEARIA_ADDRESS`, hoje "Rua das Palmeiras, 214 · Centro").
+6. ~~Endereço real da barbearia~~ — Av. Márcia Antônia, 1052 · Tupanuara · São Joaquim de Bicas/MG.
 7. Serviço "Tanto faz" atribui barbeiro na confirmação — cliente aceita não saber com quem vai antes de pagar?

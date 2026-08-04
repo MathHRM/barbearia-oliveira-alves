@@ -4,7 +4,7 @@ return [
     'name' => env('BARBEARIA_NAME', 'Barbearia Oliveira Alves'),
 
     // endereço exibido na confirmação e no .ics
-    'address' => env('BARBEARIA_ADDRESS', 'Rua das Palmeiras, 214 · Centro'),
+    'address' => env('BARBEARIA_ADDRESS', 'Av. Márcia Antônia, 1052 · Tupanuara · São Joaquim de Bicas/MG'),
 
     // Fuso da barbearia. O app roda em UTC (grava timestamptz sem ambiguidade);
     // grade de horários, agenda e exibição usam este fuso.

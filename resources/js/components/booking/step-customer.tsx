@@ -50,7 +50,7 @@ export function StepCustomer({ form, errors, service, slot, date, shop, onChange
                     />
                 </Field>
 
-                <Field label="CPF" error={errors.document} hint="Exigido pelo pagamento.">
+                <Field label="CPF" error={errors.document} hint="Exigido pelo gateway em Pix e cartão.">
                     <Input
                         value={form.document}
                         onChange={(event) => onChange({ document: maskCpf(event.target.value) })}
