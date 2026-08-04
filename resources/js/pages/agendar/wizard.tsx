@@ -1,4 +1,5 @@
 import { StepBarber } from '@/components/booking/step-barber';
+import { StepCustomer, type CustomerForm } from '@/components/booking/step-customer';
 import { StepService } from '@/components/booking/step-service';
 import { StepSlot } from '@/components/booking/step-slot';
 import { WizardShell } from '@/components/booking/wizard-shell';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useAvailability } from '@/hooks/use-availability';
 import { brl, duration } from '@/lib/format';
 import type { AvailabilitySlot, Barber, Service, Shop } from '@/types/booking';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 interface Props {
@@ -21,6 +22,10 @@ export default function Wizard({ services, barbers, shop }: Props) {
     const [barberId, setBarberId] = useState<number | null>(null);
     const [date, setDate] = useState<string | null>(null);
     const [slot, setSlot] = useState<AvailabilitySlot | null>(null);
+    const [form, setForm] = useState<CustomerForm>({ name: '', phone: '', document: '', email: '', note: '', billing_type: 'PIX' });
+    const [errors, setErrors] = useState<Partial<Record<keyof CustomerForm, string>>>({});
+    const [submitting, setSubmitting] = useState(false);
+    const [failure, setFailure] = useState<string | null>(null);
 
     const availability = useAvailability(step === 3 ? service : null, barberId, date);
 
@@ -40,6 +45,60 @@ export default function Wizard({ services, barbers, shop }: Props) {
         setDate(null);
         setSlot(null);
         setStep(3);
+    };
+
+    /** Passo 04: reserva o horário e abre a cobrança; o servidor devolve para onde ir. */
+    const submit = async () => {
+        if (!service || !slot || submitting) {
+            return;
+        }
+
+        setSubmitting(true);
+        setErrors({});
+        setFailure(null);
+
+        try {
+            const response = await fetch('/agendamentos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? ''),
+                },
+                body: JSON.stringify({
+                    service_id: service.id,
+                    barber_id: barberId,
+                    starts_at: slot.starts_at,
+                    ...form,
+                }),
+            });
+
+            const payload = await response.json();
+
+            if (response.status === 201) {
+                router.visit(payload.redirect);
+
+                return;
+            }
+
+            if (response.status === 422) {
+                setErrors(Object.fromEntries(Object.entries(payload.errors ?? {}).map(([key, list]) => [key, (list as string[])[0]])));
+
+                return;
+            }
+
+            // 409 = horário tomado no meio do caminho: volta para a grade
+            if (response.status === 409) {
+                setSlot(null);
+                setStep(3);
+            }
+
+            setFailure(payload.message ?? 'Não conseguimos concluir agora. Tente de novo.');
+        } catch {
+            setFailure('Falha de conexão. Tente de novo.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -65,7 +124,7 @@ export default function Wizard({ services, barbers, shop }: Props) {
                     subtitle={service ? `${service.name} · ${duration(service.duration_min)} · ${brl(service.price_cents)}` : undefined}
                     onBack={back}
                     footer={
-                        <Button className="w-full" size="lg" disabled={!slot}>
+                        <Button className="w-full" size="lg" disabled={!slot} onClick={() => setStep(4)}>
                             {slot ? `Continuar · ${slot.label}` : 'Escolha um horário'}
                         </Button>
                     }
@@ -87,6 +146,33 @@ export default function Wizard({ services, barbers, shop }: Props) {
                     <p className="text-muted-foreground mt-6 text-xs">
                         O horário fica reservado por {shop.reservation_ttl_min} minutos enquanto você paga.
                     </p>
+                </WizardShell>
+            )}
+
+            {step === 4 && service && slot && date && (
+                <WizardShell
+                    step={4}
+                    title="Seus dados"
+                    subtitle="Só o necessário para confirmar e avisar você."
+                    onBack={back}
+                    footer={
+                        <div className="space-y-2">
+                            {failure && <p className="text-destructive text-center text-xs">{failure}</p>}
+                            <Button className="w-full" size="lg" disabled={submitting} onClick={submit}>
+                                {submitting ? 'Reservando…' : `Ir para o pagamento · ${brl(service.price_cents)}`}
+                            </Button>
+                        </div>
+                    }
+                >
+                    <StepCustomer
+                        form={form}
+                        errors={errors}
+                        service={service}
+                        slot={slot}
+                        date={date}
+                        shop={shop}
+                        onChange={(patch) => setForm((current) => ({ ...current, ...patch }))}
+                    />
                 </WizardShell>
             )}
         </>

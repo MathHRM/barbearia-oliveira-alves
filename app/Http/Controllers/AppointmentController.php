@@ -12,6 +12,7 @@ use App\Models\Service;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -98,6 +99,34 @@ class AppointmentController extends Controller
         $cancel->handle($appointment, reason: 'Cancelado pelo cliente', refund: true);
 
         return back()->with('success', 'Agendamento cancelado. O estorno cai na sua conta em alguns dias.');
+    }
+
+    /** Evento para o calendário do cliente — horários em UTC, como manda o iCalendar. */
+    public function ics(string $token): HttpResponse
+    {
+        $appointment = $this->find($token);
+        $stamp = fn ($date) => $date->copy()->utc()->format('Ymd\THis\Z');
+
+        $lines = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'PRODID:-//'.config('barbearia.name').'//PT-BR',
+            'BEGIN:VEVENT',
+            'UID:'.$appointment->public_token.'@barbearia',
+            'DTSTAMP:'.$stamp(now()),
+            'DTSTART:'.$stamp($appointment->starts_at),
+            'DTEND:'.$stamp($appointment->ends_at),
+            'SUMMARY:'.$appointment->service->name.' · '.config('barbearia.name'),
+            'DESCRIPTION:'.$appointment->code().' com '.$appointment->barber->display_name,
+            'LOCATION:'.config('barbearia.address'),
+            'END:VEVENT',
+            'END:VCALENDAR',
+        ];
+
+        return response(implode("\r\n", $lines), 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="agendamento.ics"',
+        ]);
     }
 
     private function find(string $token): Appointment

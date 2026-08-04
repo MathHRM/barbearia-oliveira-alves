@@ -62,3 +62,30 @@ export function dayParts(date: string): { weekday: string; day: string; month: s
 export function longDate(date: string): string {
     return fromIsoDate(date).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
 }
+
+/** Máscara progressiva do WhatsApp: (11) 98888-7777 */
+export function maskPhone(value: string): string {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+
+    if (digits.length <= 2) {
+        return digits;
+    }
+
+    if (digits.length <= 6) {
+        return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    }
+
+    const split = digits.length > 10 ? 7 : 6;
+
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, split)}-${digits.slice(split)}`;
+}
+
+/** Máscara progressiva do CPF: 390.533.447-05 */
+export function maskCpf(value: string): string {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+
+    return digits
+        .replace(/^(\d{3})(\d)/, '$1.$2')
+        .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+        .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+}

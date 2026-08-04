@@ -180,6 +180,36 @@ class PaymentFlowTest extends TestCase
         $this->assertSame(AppointmentStatus::PendingPayment, $viva->refresh()->status);
     }
 
+    public function test_tela_de_acompanhamento_mostra_a_cobranca(): void
+    {
+        $appointment = Appointment::factory()->pending()->create();
+        $appointment->payment()->create([
+            'provider_payment_id' => 'pay_123',
+            'billing_type' => 'PIX',
+            'amount_cents' => 4500,
+            'status' => PaymentStatus::Pending,
+            'pix_payload' => 'copia-e-cola',
+        ]);
+
+        $this->get("/agendamentos/{$appointment->public_token}")
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('agendar/acompanhamento')
+                ->where('appointment.status', 'pending_payment')
+                ->where('appointment.payment.pix_payload', 'copia-e-cola'));
+    }
+
+    public function test_baixa_o_ics_do_agendamento(): void
+    {
+        $appointment = Appointment::factory()->create();
+
+        $response = $this->get("/agendamentos/{$appointment->public_token}/agenda.ics")->assertOk();
+
+        $response->assertHeader('Content-Type', 'text/calendar; charset=utf-8');
+        $this->assertStringContainsString('BEGIN:VEVENT', $response->getContent());
+        $this->assertStringContainsString('DTSTART:', $response->getContent());
+    }
+
     private function webhook(string $id, string $event)
     {
         return $this->postJson('/webhooks/asaas', [

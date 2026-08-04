@@ -13,6 +13,7 @@ Route::get('api/availability', [AvailabilityController::class, 'index'])->name('
 Route::post('agendamentos', [AppointmentController::class, 'store'])->name('appointments.store');
 Route::get('agendamentos/{token}', [AppointmentController::class, 'show'])->name('appointments.show');
 Route::get('agendamentos/{token}/status', [AppointmentController::class, 'status'])->name('appointments.status');
+Route::get('agendamentos/{token}/agenda.ics', [AppointmentController::class, 'ics'])->name('appointments.ics');
 Route::post('agendamentos/{token}/cancelar', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
 
 // o Asaas não manda CSRF; a autenticação é o header asaas-access-token
