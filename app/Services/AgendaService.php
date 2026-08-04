@@ -78,10 +78,13 @@ class AgendaService
             'attended' => $by(AppointmentStatus::Attended->value)->count(),
             'canceled' => $by(AppointmentStatus::Canceled->value)->count()
                 + $by(AppointmentStatus::NoShow->value)->count(),
-            // previsto = dinheiro que ainda pode entrar (confirmado) ou ficou pendurado na falta
-            'expected_cents' => (int) $rows
-                ->whereIn('status', [AppointmentStatus::Confirmed->value, AppointmentStatus::NoShow->value])
-                ->sum('price_cents'),
+            // previsto = todo o dinheiro do dia, menos o que caiu (cancelado/expirado)
+            'expected_cents' => (int) $rows->whereIn('status', [
+                AppointmentStatus::PendingPayment->value,
+                AppointmentStatus::Confirmed->value,
+                AppointmentStatus::Attended->value,
+                AppointmentStatus::NoShow->value,
+            ])->sum('price_cents'),
             // recebido = quem sentou na cadeira + cancelamento cujo pagamento não foi estornado
             'received_cents' => (int) $rows->filter(fn (array $row) => $row['status'] === AppointmentStatus::Attended->value
                 || ($row['status'] === AppointmentStatus::Canceled->value && $row['paid']))->sum('price_cents'),

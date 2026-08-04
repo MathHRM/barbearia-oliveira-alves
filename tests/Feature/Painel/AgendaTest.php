@@ -84,21 +84,22 @@ class AgendaTest extends TestCase
                 ->where('totals.confirmed', 1)
                 ->where('totals.attended', 1)
                 ->where('totals.canceled', 1)
-                ->where('totals.expected_cents', 4500)
+                ->where('totals.expected_cents', 9000)
                 ->where('totals.received_cents', 4500)
                 ->where('can.see_revenue', true));
     }
 
-    /** Previsto e recebido não podem contar o mesmo agendamento duas vezes. */
-    public function test_previsto_e_recebido_separam_o_que_entrou_do_que_falta(): void
+    /** Previsto = tudo que o dia promete; recebido = o que de fato ficou no caixa. */
+    public function test_previsto_soma_o_dia_e_recebido_so_o_que_entrou(): void
     {
         $barber = $this->barber();
         $service = Service::factory()->create(['duration_min' => 30, 'price_cents' => 4500]);
         $make = fn (string $time) => Appointment::factory()->for($barber)->for($service)->at($this->at($time));
 
-        $make('09:00')->create();                  // confirmado  → previsto
-        $make('10:00')->noShow()->create();        // faltou      → previsto
-        $make('11:00')->attended()->create();      // compareceu  → recebido
+        $make('08:00')->pending()->create();       // conta a receber → previsto
+        $make('09:00')->create();                  // confirmado     → previsto
+        $make('10:00')->noShow()->create();        // faltou         → previsto
+        $make('11:00')->attended()->create();      // compareceu     → previsto e recebido
         $paid = $make('12:00')->canceled()->create();
         $refunded = $make('13:00')->canceled()->create();
 
@@ -114,7 +115,7 @@ class AgendaTest extends TestCase
         $this->actingAs($this->owner())
             ->get('/painel/agenda?date=2026-09-02')
             ->assertInertia(fn ($page) => $page
-                ->where('totals.expected_cents', 9000)   // confirmado + falta
+                ->where('totals.expected_cents', 18000)  // pendente + confirmado + falta + compareceu
                 ->where('totals.received_cents', 9000)); // compareceu + cancelado sem estorno
     }
 
