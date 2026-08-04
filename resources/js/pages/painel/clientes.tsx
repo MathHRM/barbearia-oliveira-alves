@@ -1,6 +1,6 @@
-import { Pagination } from '@/components/painel/pagination';
 import { StatusBadge } from '@/components/painel/status-badge';
 import { Input } from '@/components/ui/input';
+import { Pagination } from '@/components/ui/pagination';
 import { PainelLayout } from '@/layouts/painel-layout';
 import type { Paginated, StatusTone } from '@/types/painel';
 import { Head, router } from '@inertiajs/react';

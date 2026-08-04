@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { CheckboxField } from '@/components/ui/checkbox-field';
+import { TimeInput } from '@/components/ui/date-time-input';
 import { PainelLayout } from '@/layouts/painel-layout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
@@ -87,29 +88,22 @@ function BarberGrid({ barber, weekdays }: { barber: BarberHours; weekdays: strin
 
                     return (
                         <li key={weekday} className="flex flex-wrap items-center gap-3">
-                            <label className="flex w-32 items-center gap-2 text-sm">
-                                <input type="checkbox" checked={value !== null} onChange={() => toggle(weekday)} />
-                                {label}
-                            </label>
+                            <CheckboxField className="w-32" checked={value !== null} onChange={() => toggle(weekday)} label={label} />
 
                             {value ? (
                                 <div className="flex items-center gap-2">
-                                    <Input
-                                        type="time"
-                                        className="h-9 w-32"
+                                    <TimeInput
+                                        className="w-32"
                                         value={value.starts_at}
-                                        onChange={(event) =>
-                                            setHours((current) => ({ ...current, [weekday]: { ...value, starts_at: event.target.value } }))
-                                        }
+                                        onChange={(time) => setHours((current) => ({ ...current, [weekday]: { ...value, starts_at: time } }))}
+                                        aria-label={`${label}: início`}
                                     />
                                     <span className="text-muted-foreground text-sm">até</span>
-                                    <Input
-                                        type="time"
-                                        className="h-9 w-32"
+                                    <TimeInput
+                                        className="w-32"
                                         value={value.ends_at}
-                                        onChange={(event) =>
-                                            setHours((current) => ({ ...current, [weekday]: { ...value, ends_at: event.target.value } }))
-                                        }
+                                        onChange={(time) => setHours((current) => ({ ...current, [weekday]: { ...value, ends_at: time } }))}
+                                        aria-label={`${label}: fim`}
                                     />
                                 </div>
                             ) : (

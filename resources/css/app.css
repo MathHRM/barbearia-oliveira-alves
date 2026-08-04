@@ -7,8 +7,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-    --font-sans:
-        'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     --font-display: 'Poppins', var(--font-sans);
     --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
 
@@ -187,6 +186,23 @@
         letter-spacing: 0.14em;
         text-transform: uppercase;
         color: var(--muted-foreground);
+    }
+}
+
+@layer components {
+    /* campo de data/hora: fundo escuro nativo e sem o ícone cinza do Chrome —
+       quem abre o calendário é o botão do DateInput/TimeInput */
+    .picker-input {
+        color-scheme: dark;
+    }
+
+    .picker-input::-webkit-calendar-picker-indicator {
+        display: none;
+    }
+
+    .picker-input::-webkit-inner-spin-button,
+    .picker-input::-webkit-clear-button {
+        display: none;
     }
 }
 

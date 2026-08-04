@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { DateInput, TimeInput } from '@/components/ui/date-time-input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -94,15 +95,8 @@ export function ManualAppointmentDialog({ date, services, barbers, canPickBarber
                     )}
 
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label htmlFor="manual-date">Dia</Label>
-                            <Input id="manual-date" type="date" value={data.date} onChange={(event) => setData('date', event.target.value)} />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label htmlFor="manual-time">Hora</Label>
-                            <Input id="manual-time" type="time" value={data.time} onChange={(event) => setData('time', event.target.value)} />
-                            {errors.time && <p className="text-destructive text-xs">{errors.time}</p>}
-                        </div>
+                        <DateInput label="Dia" value={data.date} onChange={(value) => setData('date', value)} error={errors.date} />
+                        <TimeInput label="Hora" value={data.time} onChange={(value) => setData('time', value)} error={errors.time} />
                     </div>
 
                     <div className="space-y-1.5">

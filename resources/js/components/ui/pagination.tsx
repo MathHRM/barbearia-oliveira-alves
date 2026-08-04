@@ -1,9 +1,10 @@
 import { cn } from '@/lib/utils';
-import type { Paginated } from '@/types/painel';
+import type { Paginated } from '@/types/pagination';
 import { Link } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import type { ReactNode } from 'react';
 
-/** Rodapé das tabelas do painel: contagem em português + páginas numeradas. */
+/** Rodapé de tabela: contagem em português + páginas numeradas. `label` é o plural ("clientes"). */
 export function Pagination<T>({ page, label }: { page: Paginated<T>; label: string }) {
     if (page.total === 0) {
         return null;
@@ -46,7 +47,7 @@ export function Pagination<T>({ page, label }: { page: Paginated<T>; label: stri
     );
 }
 
-function PageLink({ url, active, children }: { url: string | null; active?: boolean; children: React.ReactNode }) {
+function PageLink({ url, active, children }: { url: string | null; active?: boolean; children: ReactNode }) {
     const classes = cn(
         'flex h-9 min-w-9 items-center justify-center gap-1 rounded-lg border px-3 text-sm transition',
         active

@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { CheckboxField } from '@/components/ui/checkbox-field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PainelLayout } from '@/layouts/painel-layout';
@@ -126,10 +127,12 @@ function BarberForm({ barber, onClose }: { barber?: BarberRow; onClose: () => vo
                 )}
             </div>
 
-            <label className="text-muted-foreground flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={data.active} onChange={(event) => setData('active', event.target.checked)} />
-                Atende e aparece no site
-            </label>
+            <CheckboxField
+                checked={data.active}
+                onChange={(checked) => setData('active', checked)}
+                label="Atende e aparece no site"
+                description="Desmarcado, ele some do agendamento público e perde o acesso ao painel."
+            />
 
             <div className="flex justify-end gap-2">
                 <Button size="sm" variant="ghost" onClick={onClose}>

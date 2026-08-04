@@ -3,8 +3,9 @@ import { ManualAppointmentDialog } from '@/components/painel/manual-appointment-
 import { StatCard } from '@/components/painel/stat-card';
 import { StatusBadge } from '@/components/painel/status-badge';
 import { Button } from '@/components/ui/button';
+import { CheckboxField } from '@/components/ui/checkbox-field';
+import { DateInput, TimeInput } from '@/components/ui/date-time-input';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { PainelLayout } from '@/layouts/painel-layout';
 import { brl, longDate } from '@/lib/format';
 import type { AgendaBlock, AgendaRow, AgendaTotals, PainelBarber, PainelService } from '@/types/painel';
@@ -45,7 +46,7 @@ export default function Agenda({ date, prev, next, today, barberId, barbers, row
                 <Button variant="outline" size="sm" onClick={() => go({ date: prev })}>
                     <ChevronLeft className="size-4" /> Ontem
                 </Button>
-                <Input type="date" value={date} onChange={(event) => go({ date: event.target.value })} className="h-9 w-[10.5rem]" />
+                <DateInput value={date} onChange={(value) => go({ date: value })} className="w-[11.5rem]" aria-label="Dia da agenda" />
                 <Button variant="outline" size="sm" onClick={() => go({ date: next })}>
                     Amanhã <ChevronRight className="size-4" />
                 </Button>
@@ -215,54 +216,31 @@ function BlockPanel({
             )}
 
             <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                    <Label htmlFor="block-date" className="text-xs">
-                        {range ? 'Do dia' : 'Dia'}
-                    </Label>
-                    <Input id="block-date" type="date" value={data.date} onChange={(event) => setData('date', event.target.value)} />
-                </div>
+                <DateInput label={range ? 'Do dia' : 'Dia'} value={data.date} onChange={(value) => setData('date', value)} error={errors.date} />
                 {range && (
-                    <div className="space-y-1.5">
-                        <Label htmlFor="block-until" className="text-xs">
-                            Até o dia
-                        </Label>
-                        <Input
-                            id="block-until"
-                            type="date"
-                            min={data.date}
-                            value={data.until}
-                            onChange={(event) => setData('until', event.target.value)}
-                        />
-                    </div>
+                    <DateInput
+                        label="Até o dia"
+                        min={data.date}
+                        value={data.until}
+                        onChange={(value) => setData('until', value)}
+                        error={errors.until}
+                    />
                 )}
-                <div className="space-y-1.5">
-                    <Label htmlFor="block-starts" className="text-xs">
-                        Das
-                    </Label>
-                    <Input id="block-starts" type="time" value={data.starts} onChange={(event) => setData('starts', event.target.value)} />
-                </div>
-                <div className="space-y-1.5">
-                    <Label htmlFor="block-ends" className="text-xs">
-                        Às
-                    </Label>
-                    <Input id="block-ends" type="time" value={data.ends} onChange={(event) => setData('ends', event.target.value)} />
-                </div>
+                <TimeInput label="Das" value={data.starts} onChange={(value) => setData('starts', value)} error={errors.starts} />
+                <TimeInput label="Às" value={data.ends} onChange={(value) => setData('ends', value)} error={errors.ends} />
             </div>
 
-            <label className="text-muted-foreground flex items-center gap-2 text-xs">
-                <input
-                    type="checkbox"
-                    checked={range}
-                    onChange={(event) => {
-                        setRange(event.target.checked);
-                        setData('until', event.target.checked ? data.date : '');
-                    }}
-                />
-                Repetir por vários dias
-            </label>
+            <CheckboxField
+                checked={range}
+                onChange={(checked) => {
+                    setRange(checked);
+                    setData('until', checked ? data.date : '');
+                }}
+                label="Repetir por vários dias"
+                className="text-muted-foreground"
+            />
 
             <Input value={data.reason} onChange={(event) => setData('reason', event.target.value)} placeholder="Motivo (opcional)" />
-            {(errors.ends || errors.until || errors.date) && <p className="text-destructive text-xs">{errors.ends ?? errors.until ?? errors.date}</p>}
 
             <Button size="sm" className="w-full" disabled={processing} onClick={submit}>
                 Bloquear

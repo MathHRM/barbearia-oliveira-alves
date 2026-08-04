@@ -251,6 +251,19 @@ Extraído da logo: preto, ciano como único destaque, títulos geométricos pesa
 **Badges de status** — fundo 10% + borda 32–35% da cor: confirmado (ciano),
 compareceu (verde `#8FD86A`), cancelado (vermelho `#E05A4E`).
 
+### Componentes (`resources/js/components/ui`)
+
+| Componente | Uso |
+|---|---|
+| `Field` | rótulo + controle + dica/erro; base dos campos. `children` recebe o `id` gerado |
+| `DateInput` | dia (`YYYY-MM-DD`), números tabulares, botão de calendário abre o seletor nativo |
+| `TimeInput` | hora (`HH:mm`), mesma anatomia com ícone de relógio |
+| `CheckboxField` | caixa + rótulo clicável; `variant="card"` desenha a linha inteira como alvo |
+| `Pagination` | rodapé de tabela: "Mostrando 1–15 de 42 clientes" + páginas, tudo em pt-BR |
+
+O ícone nativo do Chrome em `date`/`time` é escondido pela classe `.picker-input`
+(`resources/css/app.css`); quem abre o seletor é o botão da marca, via `showPicker()`.
+
 ---
 
 ### Fuso horário

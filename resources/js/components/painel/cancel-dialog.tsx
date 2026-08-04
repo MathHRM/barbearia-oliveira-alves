@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { CheckboxField } from '@/components/ui/checkbox-field';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -49,13 +49,13 @@ export function CancelDialog({ row, onClose }: { row: AgendaRow | null; onClose:
                     </div>
 
                     {row.payment?.refundable ? (
-                        <label className="flex items-start gap-3 text-sm">
-                            <Checkbox checked={data.refund} onClick={() => setData('refund', !data.refund)} />
-                            <span>
-                                Estornar {row.payment.billing_type === 'PIX' ? 'o Pix' : 'o cartão'} integralmente
-                                <span className="text-muted-foreground block text-xs">O Asaas devolve o valor cheio para o cliente.</span>
-                            </span>
-                        </label>
+                        <CheckboxField
+                            variant="card"
+                            checked={data.refund}
+                            onChange={(checked) => setData('refund', checked)}
+                            label={`Estornar ${row.payment.billing_type === 'PIX' ? 'o Pix' : 'o cartão'} integralmente`}
+                            description="O Asaas devolve o valor cheio para o cliente."
+                        />
                     ) : (
                         <p className="text-muted-foreground text-xs">Sem pagamento confirmado — nada a estornar.</p>
                     )}
