@@ -9,6 +9,7 @@ use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\Service;
 use App\Services\AvailabilityService;
+use App\Support\Document;
 use App\Support\Phone;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
@@ -24,7 +25,7 @@ class ReserveAppointment
     public function __construct(private readonly AvailabilityService $availability) {}
 
     /**
-     * @param  array{name: string, phone: string, email: ?string, note: ?string}  $customer
+     * @param  array{name: string, phone: string, email: ?string, document: ?string, note: ?string}  $customer
      *
      * @throws SlotUnavailableException
      */
@@ -75,6 +76,7 @@ class ReserveAppointment
         $customer = Customer::firstOrNew(['phone_e164' => $phone]);
         $customer->name = $data['name'];
         $customer->email = $data['email'] ?? $customer->email;
+        $customer->document = Document::digits((string) ($data['document'] ?? '')) ?: $customer->document;
         $customer->first_seen_at ??= now();
         $customer->save();
 

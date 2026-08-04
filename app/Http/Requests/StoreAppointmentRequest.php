@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Actions\CreateCharge;
+use App\Support\Document;
 use App\Support\Phone;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -17,7 +19,9 @@ class StoreAppointmentRequest extends FormRequest
             'name' => ['required', 'string', 'min:2', 'max:120'],
             'phone' => ['required', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:180'],
+            'document' => ['required', 'string', 'max:20'],
             'note' => ['nullable', 'string', 'max:500'],
+            'billing_type' => ['required', 'in:'.CreateCharge::PIX.','.CreateCharge::CARD],
         ];
     }
 
@@ -28,6 +32,10 @@ class StoreAppointmentRequest extends FormRequest
                 if ($this->filled('phone') && ! Phone::isValid((string) $this->input('phone'))) {
                     $validator->errors()->add('phone', 'Informe um WhatsApp válido com DDD.');
                 }
+
+                if ($this->filled('document') && ! Document::isValidCpf((string) $this->input('document'))) {
+                    $validator->errors()->add('document', 'CPF inválido.');
+                }
             },
         ];
     }
@@ -37,6 +45,7 @@ class StoreAppointmentRequest extends FormRequest
         return [
             'name.required' => 'Precisamos do seu nome.',
             'phone.required' => 'Precisamos do seu WhatsApp para confirmar.',
+            'document.required' => 'O CPF é exigido pelo pagamento.',
         ];
     }
 }

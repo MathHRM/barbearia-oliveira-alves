@@ -1,14 +1,24 @@
 <?php
 
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\AsaasWebhookController;
 use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\BookingController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [BookingController::class, 'index'])->name('home');
 Route::get('api/availability', [AvailabilityController::class, 'index'])->name('availability');
 Route::post('agendamentos', [AppointmentController::class, 'store'])->name('appointments.store');
+Route::get('agendamentos/{token}', [AppointmentController::class, 'show'])->name('appointments.show');
+Route::get('agendamentos/{token}/status', [AppointmentController::class, 'status'])->name('appointments.status');
+Route::post('agendamentos/{token}/cancelar', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
+
+// o Asaas não manda CSRF; a autenticação é o header asaas-access-token
+Route::post('webhooks/asaas', AsaasWebhookController::class)
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->name('webhooks.asaas');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', function () {

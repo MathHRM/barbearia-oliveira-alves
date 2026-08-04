@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Service;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class ReserveAppointmentTest extends TestCase
@@ -20,6 +21,13 @@ class ReserveAppointmentTest extends TestCase
         parent::setUp();
         // quarta 02/09/2026 08:00 na barbearia; os testes reservam na quinta 03/09
         Carbon::setTestNow(Carbon::parse('2026-09-02 08:00:00', config('barbearia.timezone')));
+
+        // este teste cuida só da reserva; a cobrança tem cobertura própria
+        Http::fake([
+            '*/customers' => Http::response(['id' => 'cus_123']),
+            '*/payments/pay_123/pixQrCode' => Http::response(['payload' => 'copia-e-cola', 'encodedImage' => 'BASE64']),
+            '*/payments' => Http::response(['id' => 'pay_123', 'invoiceUrl' => 'https://asaas.test/i/pay_123']),
+        ]);
     }
 
     protected function tearDown(): void
@@ -48,7 +56,9 @@ class ReserveAppointmentTest extends TestCase
             'name' => 'Matheus Oliveira',
             'phone' => '(11) 98888-7777',
             'email' => 'matheus@example.com',
+            'document' => '390.533.447-05',
             'note' => 'Costeleta baixa',
+            'billing_type' => 'PIX',
         ];
     }
 
