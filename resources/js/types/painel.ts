@@ -35,6 +35,20 @@ export interface AgendaBlock {
     starts_at: string;
     ends_at: string;
     reason: string | null;
+    created_by: string | null;
+    created_at: string;
+}
+
+export interface Paginated<T> {
+    data: T[];
+    from: number | null;
+    to: number | null;
+    total: number;
+    current_page: number;
+    last_page: number;
+    prev_page_url: string | null;
+    next_page_url: string | null;
+    links: { url: string | null; label: string; active: boolean }[];
 }
 
 export interface AgendaTotals {

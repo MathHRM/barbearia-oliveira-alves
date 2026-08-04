@@ -8,10 +8,14 @@ use App\Support\PainelScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
-/** Bloqueio pontual: some da agenda pública assim que salva. */
+/** Bloqueio pontual ou de período: some da agenda pública assim que salva. */
 class TimeBlockController extends Controller
 {
+    /** teto do período: férias longas ainda cabem, dedo escorregado não vira mil linhas */
+    private const MAX_DAYS = 90;
+
     public function store(Request $request): RedirectResponse
     {
         $scope = PainelScope::for($request->user());
@@ -19,6 +23,7 @@ class TimeBlockController extends Controller
         $validated = $request->validate([
             'barber_id' => ['nullable', 'integer', 'exists:barbers,id'],
             'date' => ['required', 'date_format:Y-m-d'],
+            'until' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date'],
             'starts' => ['required', 'date_format:H:i'],
             'ends' => ['required', 'date_format:H:i', 'after:starts'],
             'reason' => ['nullable', 'string', 'max:120'],
@@ -29,16 +34,29 @@ class TimeBlockController extends Controller
         abort_if($barberId === null, 403);
 
         $tz = config('barbearia.timezone');
+        $first = Carbon::parse($validated['date'], $tz);
+        $last = Carbon::parse($validated['until'] ?? $validated['date'], $tz);
+        $days = (int) $first->diffInDays($last) + 1;
 
-        TimeBlock::create([
-            'barber_id' => $barberId,
-            'starts_at' => Carbon::parse($validated['date'].' '.$validated['starts'], $tz),
-            'ends_at' => Carbon::parse($validated['date'].' '.$validated['ends'], $tz),
-            'reason' => $validated['reason'] ?? null,
-            'created_by' => $request->user()->id,
-        ]);
+        if ($days > self::MAX_DAYS) {
+            return back()->withErrors(['until' => 'O período não pode passar de '.self::MAX_DAYS.' dias.']);
+        }
 
-        return back()->with('success', 'Horário bloqueado.');
+        DB::transaction(function () use ($first, $days, $barberId, $validated, $request, $tz) {
+            for ($offset = 0; $offset < $days; $offset++) {
+                $day = $first->copy()->addDays($offset)->format('Y-m-d');
+
+                TimeBlock::create([
+                    'barber_id' => $barberId,
+                    'starts_at' => Carbon::parse($day.' '.$validated['starts'], $tz),
+                    'ends_at' => Carbon::parse($day.' '.$validated['ends'], $tz),
+                    'reason' => $validated['reason'] ?? null,
+                    'created_by' => $request->user()->id,
+                ]);
+            }
+        });
+
+        return back()->with('success', $days === 1 ? 'Horário bloqueado.' : "{$days} dias bloqueados.");
     }
 
     public function destroy(Request $request, TimeBlock $block): RedirectResponse

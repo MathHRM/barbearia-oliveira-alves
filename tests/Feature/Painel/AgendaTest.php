@@ -245,4 +245,73 @@ class AgendaTest extends TestCase
         $this->actingAs($this->owner())->delete("/painel/bloqueios/{$block->id}")->assertRedirect();
         $this->assertSame(0, TimeBlock::count());
     }
+
+    public function test_bloqueio_por_periodo_cria_um_por_dia(): void
+    {
+        $barber = $this->barber();
+
+        $this->actingAs($this->owner())->post('/painel/bloqueios', [
+            'barber_id' => $barber->id,
+            'date' => '2026-09-02',
+            'until' => '2026-09-06',
+            'starts' => '12:00',
+            'ends' => '13:00',
+            'reason' => 'Férias',
+        ])->assertRedirect();
+
+        $this->assertSame(5, TimeBlock::count());
+
+        $tz = config('barbearia.timezone');
+        $dias = TimeBlock::orderBy('starts_at')->get()
+            ->map(fn (TimeBlock $block) => $block->starts_at->timezone($tz)->format('Y-m-d H:i'))
+            ->all();
+
+        $this->assertSame([
+            '2026-09-02 12:00',
+            '2026-09-03 12:00',
+            '2026-09-04 12:00',
+            '2026-09-05 12:00',
+            '2026-09-06 12:00',
+        ], $dias);
+    }
+
+    public function test_periodo_invertido_devolve_erro_em_portugues(): void
+    {
+        $barber = $this->barber();
+
+        $response = $this->actingAs($this->owner())->post('/painel/bloqueios', [
+            'barber_id' => $barber->id,
+            'date' => '2026-09-02',
+            'starts' => '15:00',
+            'ends' => '14:00',
+        ])->assertSessionHasErrors('ends');
+
+        $this->assertSame(
+            'O fim do bloqueio precisa ser depois do início.',
+            session('errors')->first('ends'),
+        );
+
+        $response->assertRedirect();
+        $this->assertSame(0, TimeBlock::count());
+    }
+
+    public function test_agenda_mostra_quem_bloqueou(): void
+    {
+        $owner = $this->owner();
+        $barber = $this->barber();
+
+        $this->actingAs($owner)->post('/painel/bloqueios', [
+            'barber_id' => $barber->id,
+            'date' => '2026-09-02',
+            'starts' => '12:00',
+            'ends' => '13:00',
+            'reason' => 'Almoço',
+        ])->assertRedirect();
+
+        $this->actingAs($owner)
+            ->get('/painel/agenda?date=2026-09-02')
+            ->assertInertia(fn ($page) => $page
+                ->where('blocks.0.created_by', $owner->name)
+                ->where('blocks.0.reason', 'Almoço'));
+    }
 }

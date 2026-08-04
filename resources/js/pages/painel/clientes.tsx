@@ -1,8 +1,9 @@
+import { Pagination } from '@/components/painel/pagination';
 import { StatusBadge } from '@/components/painel/status-badge';
 import { Input } from '@/components/ui/input';
 import { PainelLayout } from '@/layouts/painel-layout';
-import type { StatusTone } from '@/types/painel';
-import { Head, Link, router } from '@inertiajs/react';
+import type { Paginated, StatusTone } from '@/types/painel';
+import { Head, router } from '@inertiajs/react';
 import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -14,12 +15,6 @@ interface CustomerRow {
     visits: number;
     last_visit: string | null;
     situation: string;
-}
-
-interface Paginated<T> {
-    data: T[];
-    links: { url: string | null; label: string; active: boolean }[];
-    total: number;
 }
 
 const TONES: Record<string, StatusTone> = { Novo: 'warning', Ativo: 'brand', Fiel: 'success', Perdido: 'danger' };
@@ -87,27 +82,7 @@ export default function Clientes({ customers, q, churn_days }: { customers: Pagi
                 </table>
             </div>
 
-            {customers.links.length > 3 && (
-                <nav className="mt-4 flex flex-wrap gap-1">
-                    {customers.links.map((link, index) =>
-                        link.url === null ? (
-                            <span
-                                key={index}
-                                className="text-muted-foreground px-3 py-1.5 text-xs"
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        ) : (
-                            <Link
-                                key={index}
-                                href={link.url}
-                                preserveScroll
-                                className={`rounded-md px-3 py-1.5 text-xs ${link.active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
-                        ),
-                    )}
-                </nav>
-            )}
+            <Pagination page={customers} label="clientes" />
         </PainelLayout>
     );
 }

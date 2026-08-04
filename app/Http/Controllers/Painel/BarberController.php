@@ -47,7 +47,7 @@ class BarberController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'headline' => ['nullable', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:180', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         DB::transaction(function () use ($validated) {
@@ -79,7 +79,8 @@ class BarberController extends Controller
             'headline' => ['nullable', 'string', 'max:120'],
             'active' => ['boolean'],
             'email' => ['nullable', 'email', 'max:180', Rule::unique('users', 'email')->ignore($barber->user_id)],
-            'password' => ['nullable', 'string', 'min:8'],
+            // senha só muda com a confirmação batendo
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
         DB::transaction(function () use ($barber, $validated) {

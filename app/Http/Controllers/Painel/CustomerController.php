@@ -31,7 +31,7 @@ class CustomerController extends Controller
                 });
             })
             ->orderByRaw('last_visit_at desc nulls last')
-            ->paginate(20)
+            ->paginate(15)
             ->withQueryString()
             ->through(fn (Customer $customer) => [
                 'id' => $customer->id,

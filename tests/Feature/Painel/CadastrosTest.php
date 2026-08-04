@@ -139,6 +139,7 @@ class CadastrosTest extends TestCase
             'headline' => 'Degradê e navalha',
             'email' => 'rafael@barbearia.com',
             'password' => 'senha-forte',
+            'password_confirmation' => 'senha-forte',
         ])->assertRedirect();
 
         $barber = Barber::firstOrFail();
@@ -146,6 +147,20 @@ class CadastrosTest extends TestCase
         $this->assertSame('RA', $barber->initials);
         $this->assertSame(UserRole::Barber, $barber->user->role);
         $this->assertTrue(Hash::check('senha-forte', $barber->user->password));
+    }
+
+    public function test_senha_sem_confirmacao_nao_passa(): void
+    {
+        $user = User::factory()->barber()->create();
+        $barber = Barber::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($this->owner())->put("/painel/barbeiros/{$barber->id}", [
+            'name' => $barber->display_name,
+            'password' => 'senha-nova-123',
+            'password_confirmation' => 'outra-coisa',
+        ])->assertSessionHasErrors('password');
+
+        $this->assertTrue(Hash::check('password', $user->refresh()->password));
     }
 
     public function test_desativar_barbeiro_derruba_o_acesso(): void

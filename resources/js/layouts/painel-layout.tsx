@@ -34,8 +34,9 @@ export function PainelLayout({ title, subtitle, actions, children }: Props) {
     const current = page.url.split('?')[0];
 
     return (
-        <div className="bg-background text-foreground min-h-svh md:flex">
-            <aside className="border-border/80 bg-card md:flex md:min-h-svh md:w-60 md:shrink-0 md:flex-col md:border-r">
+        <div className="bg-background text-foreground min-h-svh md:flex md:items-start">
+            {/* em tela grande a sidebar fica parada e só o conteúdo rola */}
+            <aside className="border-border/80 bg-card md:sticky md:top-0 md:flex md:h-svh md:w-60 md:shrink-0 md:flex-col md:overflow-y-auto md:border-r">
                 <div className="border-border/80 flex items-center justify-between border-b px-4 py-4 md:justify-center">
                     <BrandMark className="scale-90 md:scale-100" />
                     <button
@@ -81,7 +82,7 @@ export function PainelLayout({ title, subtitle, actions, children }: Props) {
                 </div>
             </aside>
 
-            <main className="min-w-0 flex-1">
+            <main className="w-full min-w-0 flex-1 overflow-x-hidden">
                 <header className="border-border/80 flex flex-wrap items-center gap-3 border-b px-4 py-5 md:px-8">
                     <div className="min-w-0 flex-1">
                         <h1 className="text-2xl leading-tight">{title}</h1>

@@ -72,6 +72,7 @@ function BarberForm({ barber, onClose }: { barber?: BarberRow; onClose: () => vo
         headline: barber?.headline ?? '',
         email: barber?.user.email ?? '',
         password: '',
+        password_confirmation: '',
         active: barber?.active ?? true,
     });
 
@@ -112,6 +113,17 @@ function BarberForm({ barber, onClose }: { barber?: BarberRow; onClose: () => vo
                     <Input id="barber-password" type="password" value={data.password} onChange={(event) => setData('password', event.target.value)} />
                     {errors.password && <p className="text-destructive text-xs">{errors.password}</p>}
                 </div>
+                {data.password !== '' && (
+                    <div className="space-y-1.5 sm:col-start-2">
+                        <Label htmlFor="barber-password-confirmation">Repita a senha</Label>
+                        <Input
+                            id="barber-password-confirmation"
+                            type="password"
+                            value={data.password_confirmation}
+                            onChange={(event) => setData('password_confirmation', event.target.value)}
+                        />
+                    </div>
+                )}
             </div>
 
             <label className="text-muted-foreground flex items-center gap-2 text-sm">

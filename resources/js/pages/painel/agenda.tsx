@@ -99,7 +99,8 @@ export default function Agenda({ date, prev, next, today, barberId, barbers, row
                         </div>
                     </section>
 
-                    <BlockPanel date={date} barbers={barbers} barberId={barberId} blocks={blocks} canPickBarber={can.filter_barbers} />
+                    {/* key no dia: trocar de data reseta o formulário para o dia visível */}
+                    <BlockPanel key={date} date={date} barbers={barbers} barberId={barberId} blocks={blocks} canPickBarber={can.filter_barbers} />
                 </aside>
             </div>
 
@@ -172,9 +173,11 @@ function BlockPanel({
     blocks: AgendaBlock[];
     canPickBarber: boolean;
 }) {
+    const [range, setRange] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         barber_id: barberId ?? barbers[0]?.id ?? 0,
         date,
+        until: '',
         starts: '',
         ends: '',
         reason: '',
@@ -183,7 +186,10 @@ function BlockPanel({
     const submit = () => {
         post('/painel/bloqueios', {
             preserveScroll: true,
-            onSuccess: () => reset('starts', 'ends', 'reason'),
+            onSuccess: () => {
+                reset('starts', 'ends', 'reason', 'until');
+                setRange(false);
+            },
         });
     };
 
@@ -210,37 +216,77 @@ function BlockPanel({
 
             <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
+                    <Label htmlFor="block-date" className="text-xs">
+                        {range ? 'Do dia' : 'Dia'}
+                    </Label>
+                    <Input id="block-date" type="date" value={data.date} onChange={(event) => setData('date', event.target.value)} />
+                </div>
+                {range && (
+                    <div className="space-y-1.5">
+                        <Label htmlFor="block-until" className="text-xs">
+                            Até o dia
+                        </Label>
+                        <Input
+                            id="block-until"
+                            type="date"
+                            min={data.date}
+                            value={data.until}
+                            onChange={(event) => setData('until', event.target.value)}
+                        />
+                    </div>
+                )}
+                <div className="space-y-1.5">
                     <Label htmlFor="block-starts" className="text-xs">
-                        De
+                        Das
                     </Label>
                     <Input id="block-starts" type="time" value={data.starts} onChange={(event) => setData('starts', event.target.value)} />
                 </div>
                 <div className="space-y-1.5">
                     <Label htmlFor="block-ends" className="text-xs">
-                        Até
+                        Às
                     </Label>
                     <Input id="block-ends" type="time" value={data.ends} onChange={(event) => setData('ends', event.target.value)} />
                 </div>
             </div>
 
+            <label className="text-muted-foreground flex items-center gap-2 text-xs">
+                <input
+                    type="checkbox"
+                    checked={range}
+                    onChange={(event) => {
+                        setRange(event.target.checked);
+                        setData('until', event.target.checked ? data.date : '');
+                    }}
+                />
+                Repetir por vários dias
+            </label>
+
             <Input value={data.reason} onChange={(event) => setData('reason', event.target.value)} placeholder="Motivo (opcional)" />
-            {errors.ends && <p className="text-destructive text-xs">{errors.ends}</p>}
+            {(errors.ends || errors.until || errors.date) && <p className="text-destructive text-xs">{errors.ends ?? errors.until ?? errors.date}</p>}
 
             <Button size="sm" className="w-full" disabled={processing} onClick={submit}>
                 Bloquear
             </Button>
 
             {blocks.length > 0 && (
-                <ul className="border-border/80 space-y-2 border-t pt-3">
+                <ul className="border-border/80 space-y-3 border-t pt-3">
                     {blocks.map((block) => (
-                        <li key={block.id} className="flex items-center gap-2 text-sm">
-                            <span className="tabular">
-                                {block.starts_at}–{block.ends_at}
-                            </span>
-                            <span className="text-muted-foreground min-w-0 flex-1 truncate text-xs">{block.reason ?? block.barber}</span>
+                        <li key={block.id} className="flex items-start gap-2 text-sm">
+                            <div className="min-w-0 flex-1">
+                                <p className="flex flex-wrap items-center gap-x-2">
+                                    <span className="tabular font-medium">
+                                        {block.starts_at}–{block.ends_at}
+                                    </span>
+                                    <span className="text-muted-foreground text-xs">{block.barber}</span>
+                                </p>
+                                {block.reason && <p className="truncate text-xs">{block.reason}</p>}
+                                <p className="text-muted-foreground text-xs">
+                                    bloqueado por {block.created_by ?? 'usuário removido'} · {block.created_at}
+                                </p>
+                            </div>
                             <button
                                 type="button"
-                                className="text-muted-foreground hover:text-destructive"
+                                className="text-muted-foreground hover:text-destructive mt-0.5"
                                 onClick={() => router.delete(`/painel/bloqueios/${block.id}`, { preserveScroll: true })}
                                 aria-label="Remover bloqueio"
                             >

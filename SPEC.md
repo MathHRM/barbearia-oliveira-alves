@@ -312,8 +312,8 @@ com `active = false` não passa do login.
 
 1. ~~Variante de horários~~ — decidido: A (cards largos).
 2. ~~Cartão em 2x — quem paga os juros/taxa?~~ — decidido: o estabelecimento absorve.
-3. Antecedência mínima 60 min confere? Barbearia aceita agendar pra daqui 20 min?
-4. Nome/CPF-CNPJ da conta Asaas e chave de API — quem provisiona?
-5. Domínio final e remetente de e-mail (SPF/DKIM).
+3. ~~Antecedência mínima 60 min~~ — confirmado, fica em 60 min (`BARBEARIA_MIN_LEAD_MIN`).
+4. ~~Conta Asaas e chave de API~~ — chave entra por env (`ASAAS_API_KEY`); provisionamento é do dono.
+5. Domínio final e remetente de e-mail (SPF/DKIM) — ainda não definido; bloqueia o envio em produção.
 6. ~~Endereço real da barbearia~~ — Av. Márcia Antônia, 1052 · Tupanuara · São Joaquim de Bicas/MG.
-7. Serviço "Tanto faz" atribui barbeiro na confirmação — cliente aceita não saber com quem vai antes de pagar?
+7. ~~"Tanto faz" sem saber o barbeiro antes de pagar~~ — aceito.

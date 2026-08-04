@@ -44,7 +44,7 @@ class AgendaService
         [$from, $to] = $this->dayWindow($date);
 
         return TimeBlock::query()
-            ->with('barber')
+            ->with(['barber', 'creator'])
             ->where('starts_at', '<', $to)
             ->where('ends_at', '>', $from)
             ->when($barberId, fn ($query) => $query->where('barber_id', $barberId))
@@ -56,6 +56,8 @@ class AgendaService
                 'starts_at' => $this->local($block->starts_at)->format('H:i'),
                 'ends_at' => $this->local($block->ends_at)->format('H:i'),
                 'reason' => $block->reason,
+                'created_by' => $block->creator?->name,
+                'created_at' => $this->local($block->created_at)->format('d/m H:i'),
             ]);
     }
 

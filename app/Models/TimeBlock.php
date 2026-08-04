@@ -22,4 +22,9 @@ class TimeBlock extends Model
     {
         return $this->belongsTo(Barber::class);
     }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }
