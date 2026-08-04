@@ -132,6 +132,24 @@ class CadastrosTest extends TestCase
             ->assertInertia(fn ($page) => $page->where('customers.data.0.name', 'Ana Paula'));
     }
 
+    public function test_busca_de_cliente_do_balcao_responde_json(): void
+    {
+        Customer::factory()->create(['name' => 'Marcos Vinícius', 'phone_e164' => '+5531988887777']);
+        Customer::factory()->create(['name' => 'Ana Paula', 'phone_e164' => '+5531977776666']);
+
+        $this->getJson('/painel/clientes/busca?q=ana')->assertUnauthorized();
+
+        $this->actingAs($this->owner())
+            ->getJson('/painel/clientes/busca?q=9777')
+            ->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.name', 'Ana Paula')
+            ->assertJsonPath('0.phone', '(31) 97777-6666');
+
+        // termo curto não varre a base
+        $this->actingAs($this->owner())->getJson('/painel/clientes/busca?q=a')->assertOk()->assertJsonCount(0);
+    }
+
     public function test_cadastra_barbeiro_com_acesso_ao_painel(): void
     {
         $this->actingAs($this->owner())->post('/painel/barbeiros', [

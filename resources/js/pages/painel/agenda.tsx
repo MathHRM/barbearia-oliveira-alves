@@ -93,8 +93,12 @@ export default function Agenda({ date, prev, next, today, barberId, barbers, row
                             <StatCard label="Livres" value={String(totals.free_slots)} hint="Horários ainda vendáveis" />
                             {can.see_revenue && (
                                 <>
-                                    <StatCard label="Previsto" value={brl(totals.expected_cents ?? 0)} />
-                                    <StatCard label="Recebido" value={brl(totals.received_cents ?? 0)} />
+                                    <StatCard label="Previsto" value={brl(totals.expected_cents ?? 0)} hint="Confirmados e faltas" />
+                                    <StatCard
+                                        label="Recebido"
+                                        value={brl(totals.received_cents ?? 0)}
+                                        hint="Comparecimentos e cancelados sem estorno"
+                                    />
                                 </>
                             )}
                         </div>

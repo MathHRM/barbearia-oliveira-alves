@@ -78,9 +78,13 @@ class AgendaService
             'attended' => $by(AppointmentStatus::Attended->value)->count(),
             'canceled' => $by(AppointmentStatus::Canceled->value)->count()
                 + $by(AppointmentStatus::NoShow->value)->count(),
-            // previsto = tudo que ainda segura horário; recebido = o que já foi atendido e pago
-            'expected_cents' => (int) $rows->whereIn('status', AppointmentStatus::blockingValues())->sum('price_cents'),
-            'received_cents' => (int) $rows->where('paid', true)->sum('price_cents'),
+            // previsto = dinheiro que ainda pode entrar (confirmado) ou ficou pendurado na falta
+            'expected_cents' => (int) $rows
+                ->whereIn('status', [AppointmentStatus::Confirmed->value, AppointmentStatus::NoShow->value])
+                ->sum('price_cents'),
+            // recebido = quem sentou na cadeira + cancelamento cujo pagamento não foi estornado
+            'received_cents' => (int) $rows->filter(fn (array $row) => $row['status'] === AppointmentStatus::Attended->value
+                || ($row['status'] === AppointmentStatus::Canceled->value && $row['paid']))->sum('price_cents'),
             'free_slots' => $this->freeSlots($date, $barberId),
         ];
     }

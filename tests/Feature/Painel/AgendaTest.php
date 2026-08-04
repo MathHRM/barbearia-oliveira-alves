@@ -84,8 +84,38 @@ class AgendaTest extends TestCase
                 ->where('totals.confirmed', 1)
                 ->where('totals.attended', 1)
                 ->where('totals.canceled', 1)
-                ->where('totals.expected_cents', 9000)
+                ->where('totals.expected_cents', 4500)
+                ->where('totals.received_cents', 4500)
                 ->where('can.see_revenue', true));
+    }
+
+    /** Previsto e recebido não podem contar o mesmo agendamento duas vezes. */
+    public function test_previsto_e_recebido_separam_o_que_entrou_do_que_falta(): void
+    {
+        $barber = $this->barber();
+        $service = Service::factory()->create(['duration_min' => 30, 'price_cents' => 4500]);
+        $make = fn (string $time) => Appointment::factory()->for($barber)->for($service)->at($this->at($time));
+
+        $make('09:00')->create();                  // confirmado  → previsto
+        $make('10:00')->noShow()->create();        // faltou      → previsto
+        $make('11:00')->attended()->create();      // compareceu  → recebido
+        $paid = $make('12:00')->canceled()->create();
+        $refunded = $make('13:00')->canceled()->create();
+
+        $paid->payment()->create([
+            'provider_payment_id' => 'pay_ok', 'billing_type' => 'PIX',
+            'status' => PaymentStatus::Confirmed, 'amount_cents' => 4500,
+        ]);
+        $refunded->payment()->create([
+            'provider_payment_id' => 'pay_back', 'billing_type' => 'PIX',
+            'status' => PaymentStatus::Refunded, 'amount_cents' => 4500,
+        ]);
+
+        $this->actingAs($this->owner())
+            ->get('/painel/agenda?date=2026-09-02')
+            ->assertInertia(fn ($page) => $page
+                ->where('totals.expected_cents', 9000)   // confirmado + falta
+                ->where('totals.received_cents', 9000)); // compareceu + cancelado sem estorno
     }
 
     public function test_barbeiro_ve_so_a_propria_agenda_e_sem_faturamento(): void

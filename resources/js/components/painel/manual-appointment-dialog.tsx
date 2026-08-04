@@ -1,3 +1,4 @@
+import { AsyncSearch } from '@/components/ui/async-search';
 import { Button } from '@/components/ui/button';
 import { DateInput, TimeInput } from '@/components/ui/date-time-input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -8,6 +9,14 @@ import type { PainelBarber, PainelService } from '@/types/painel';
 import { useForm } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+
+interface FoundCustomer {
+    id: number;
+    name: string;
+    phone: string;
+    visits: number;
+    last_visit: string | null;
+}
 
 interface Props {
     date: string;
@@ -98,6 +107,25 @@ export function ManualAppointmentDialog({ date, services, barbers, canPickBarber
                         <DateInput label="Dia" value={data.date} onChange={(value) => setData('date', value)} error={errors.date} />
                         <TimeInput label="Hora" value={data.time} onChange={(value) => setData('time', value)} error={errors.time} />
                     </div>
+
+                    <AsyncSearch<FoundCustomer>
+                        endpoint="/painel/clientes/busca"
+                        label="Cliente já cadastrado"
+                        placeholder="Nome ou telefone"
+                        emptyMessage="Ninguém com esse nome ou telefone. Preencha abaixo."
+                        itemKey={(customer) => customer.id}
+                        onPick={(customer) => setData((current) => ({ ...current, name: customer.name, phone: customer.phone }))}
+                        renderItem={(customer) => (
+                            <>
+                                <span className="block font-medium">{customer.name}</span>
+                                <span className="text-muted-foreground block text-xs">
+                                    <span className="tabular">{customer.phone}</span> · {customer.visits} visita
+                                    {customer.visits === 1 ? '' : 's'}
+                                    {customer.last_visit ? ` · último em ${customer.last_visit}` : ''}
+                                </span>
+                            </>
+                        )}
+                    />
 
                     <div className="space-y-1.5">
                         <Label htmlFor="manual-name">Cliente</Label>

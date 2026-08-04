@@ -24,6 +24,7 @@ Route::middleware(['auth'])->prefix('painel')->name('painel.')->group(function (
     Route::delete('bloqueios/{block}', [TimeBlockController::class, 'destroy'])->name('blocks.destroy');
 
     Route::get('clientes', [CustomerController::class, 'index'])->name('customers');
+    Route::get('clientes/busca', [CustomerController::class, 'search'])->name('customers.search');
 
     // o barbeiro edita a própria grade; a coluna dos outros nem chega na tela
     Route::get('horarios', [WorkingHourController::class, 'index'])->name('hours');
