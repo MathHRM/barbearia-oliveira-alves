@@ -78,17 +78,16 @@ export function StepCustomer({ form, errors, service, slot, date, onChange }: Pr
                         </div>
                     </div>
                 </OptionCard>
-            </div>
-
-            <OptionCard selected={form.payment_method === 'cash'} onClick={() => onChange({ payment_method: 'cash' })}>
-                <div className="flex items-center gap-3">
-                    <Banknote className="text-primary size-5" />
-                    <div>
-                        <p className="font-display text-base font-semibold">Dinheiro</p>
-                        <p className="text-muted-foreground text-sm">Estimativa para o atendimento</p>
+                <OptionCard selected={form.payment_method === 'cash'} onClick={() => onChange({ payment_method: 'cash' })}>
+                    <div className="flex items-center gap-3">
+                        <Banknote className="text-primary size-5" />
+                        <div>
+                            <p className="font-display text-base font-semibold">Dinheiro</p>
+                            <p className="text-muted-foreground text-sm">Estimativa para o atendimento</p>
+                        </div>
                     </div>
-                </div>
-            </OptionCard>
+                </OptionCard>
+            </div>
 
             <p className="text-muted-foreground text-xs">O agendamento é confirmado agora. O preço exibido é apenas referencial.</p>
         </div>
