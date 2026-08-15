@@ -6,23 +6,22 @@ import { WizardShell } from '@/components/booking/wizard-shell';
 import { Button } from '@/components/ui/button';
 import { useAvailability } from '@/hooks/use-availability';
 import { brl, duration } from '@/lib/format';
-import type { AvailabilitySlot, Barber, Service, Shop } from '@/types/booking';
+import type { AvailabilitySlot, Barber, Service } from '@/types/booking';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 interface Props {
     services: Service[];
     barbers: Barber[];
-    shop: Shop;
 }
 
-export default function Wizard({ services, barbers, shop }: Props) {
+export default function Wizard({ services, barbers }: Props) {
     const [step, setStep] = useState(1);
     const [service, setService] = useState<Service | null>(null);
     const [barberId, setBarberId] = useState<number | null>(null);
     const [date, setDate] = useState<string | null>(null);
     const [slot, setSlot] = useState<AvailabilitySlot | null>(null);
-    const [form, setForm] = useState<CustomerForm>({ name: '', phone: '', document: '', email: '', note: '', billing_type: 'PIX' });
+    const [form, setForm] = useState<CustomerForm>({ name: '', phone: '', note: '', payment_method: 'pix' });
     const [errors, setErrors] = useState<Partial<Record<keyof CustomerForm, string>>>({});
     const [submitting, setSubmitting] = useState(false);
     const [failure, setFailure] = useState<string | null>(null);
@@ -47,7 +46,7 @@ export default function Wizard({ services, barbers, shop }: Props) {
         setStep(3);
     };
 
-    /** Passo 04: reserva o horário e abre a cobrança; o servidor devolve para onde ir. */
+    /** Passo 04: confirma o horário; o servidor devolve a confirmação. */
     const submit = async () => {
         if (!service || !slot || submitting) {
             return;
@@ -144,7 +143,7 @@ export default function Wizard({ services, barbers, shop }: Props) {
                         onPickSlot={setSlot}
                     />
                     <p className="text-muted-foreground mt-6 text-xs">
-                        O horário fica reservado por {shop.reservation_ttl_min} minutos enquanto você paga.
+                        O preço é uma referência do serviço. O método de pagamento será confirmado no atendimento.
                     </p>
                 </WizardShell>
             )}
@@ -159,7 +158,7 @@ export default function Wizard({ services, barbers, shop }: Props) {
                         <div className="space-y-2">
                             {failure && <p className="text-destructive text-center text-xs">{failure}</p>}
                             <Button className="w-full" size="lg" disabled={submitting} onClick={submit}>
-                                {submitting ? 'Reservando…' : `Ir para o pagamento · ${brl(service.price_cents)}`}
+                                {submitting ? 'Confirmando…' : `Confirmar agendamento · ${brl(service.price_cents)}`}
                             </Button>
                         </div>
                     }
@@ -170,7 +169,6 @@ export default function Wizard({ services, barbers, shop }: Props) {
                         service={service}
                         slot={slot}
                         date={date}
-                        shop={shop}
                         onChange={(patch) => setForm((current) => ({ ...current, ...patch }))}
                     />
                 </WizardShell>

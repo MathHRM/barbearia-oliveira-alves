@@ -18,7 +18,6 @@ export interface Shop {
     address: string;
     timezone: string;
     cancel_window_hours: number;
-    reservation_ttl_min: number;
 }
 
 /** Um dia da faixa de datas do passo 03, com quantos horários ainda tem livre. */

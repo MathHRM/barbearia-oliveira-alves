@@ -87,14 +87,13 @@ export default function Agenda({ date, prev, next, today, barberId, barbers, row
                     <section className="space-y-3">
                         <p className="eyebrow">{relativeDay(date, today)} em números</p>
                         <div className="grid grid-cols-2 gap-3">
-                            <StatCard label="Agendados" value={String(totals.confirmed + totals.pending)} />
+                            <StatCard label="Agendados" value={String(totals.confirmed)} />
                             <StatCard label="Compareceram" value={String(totals.attended)} />
                             <StatCard label="Cancelados" value={String(totals.canceled)} />
                             <StatCard label="Livres" value={String(totals.free_slots)} hint="Horários ainda vendáveis" />
                             {can.see_revenue && (
                                 <>
-                                    <StatCard label="Previsto" value={brl(totals.expected_cents ?? 0)} />
-                                    <StatCard label="Recebido" value={brl(totals.received_cents ?? 0)} />
+                                    <StatCard label="Valor estimado" value={brl(totals.estimated_cents ?? 0)} />
                                 </>
                             )}
                         </div>
@@ -132,7 +131,7 @@ function Row({ row, showBarber, onCancel }: { row: AgendaRow; showBarber: boolea
                 </p>
                 <p className="text-muted-foreground mt-0.5 text-xs">
                     {row.origin}
-                    {row.payment ? ` · ${row.payment.billing_type === 'PIX' ? 'Pix' : 'Cartão'}` : ' · pagamento no caixa'}
+                    {` · ${row.payment_method === 'pix' ? 'Pix' : row.payment_method === 'card' ? 'Cartão' : 'Dinheiro'}`}
                     {row.note ? ` · "${row.note}"` : ''}
                 </p>
             </div>
@@ -258,10 +257,12 @@ function BlockPanel({
                             <div className="min-w-0 flex-1">
                                 <p className="flex flex-wrap items-center gap-x-2">
                                     <span className="tabular font-medium">
-                                        {block.starts_at}–{block.ends_at}
+                                        {block.days > 1 ? `${block.first_day}–${block.last_day}` : block.first_day} · {block.starts_at}–
+                                        {block.ends_at}
                                     </span>
                                     <span className="text-muted-foreground text-xs">{block.barber}</span>
                                 </p>
+                                {block.days > 1 && <p className="text-muted-foreground text-xs">{block.days} dias bloqueados</p>}
                                 {block.reason && <p className="truncate text-xs">{block.reason}</p>}
                                 <p className="text-muted-foreground text-xs">
                                     bloqueado por {block.created_by ?? 'usuário removido'} · {block.created_at}
@@ -271,7 +272,7 @@ function BlockPanel({
                                 type="button"
                                 className="text-muted-foreground hover:text-destructive mt-0.5"
                                 onClick={() => router.delete(`/painel/bloqueios/${block.id}`, { preserveScroll: true })}
-                                aria-label="Remover bloqueio"
+                                aria-label={block.days > 1 ? 'Remover período bloqueado' : 'Remover bloqueio'}
                             >
                                 <Trash2 className="size-3.5" />
                             </button>

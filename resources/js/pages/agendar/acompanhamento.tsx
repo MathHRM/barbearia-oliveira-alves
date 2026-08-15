@@ -1,32 +1,24 @@
 import { BrandMark } from '@/components/booking/brand-mark';
-import { PaymentPanel } from '@/components/booking/payment-panel';
 import { Button } from '@/components/ui/button';
 import { brl, longDate } from '@/lib/format';
 import { Head, router } from '@inertiajs/react';
 import { CalendarPlus, CheckCircle2, MapPin, XCircle } from 'lucide-react';
-import { useEffect } from 'react';
 
 export interface TrackedAppointment {
     token: string;
     code: string;
-    status: 'pending_payment' | 'confirmed' | 'attended' | 'no_show' | 'canceled' | 'expired';
+    status: 'confirmed' | 'attended' | 'no_show' | 'canceled' | 'expired';
     status_label: string;
     starts_at: string;
     date: string;
     time: string;
-    reserved_until: string | null;
     price_cents: number;
     duration_min: number;
     service: string;
     barber: string;
     customer: string;
     cancelable: boolean;
-    payment: {
-        billing_type: string;
-        invoice_url: string | null;
-        pix_payload: string | null;
-        pix_qr_base64: string | null;
-    } | null;
+    payment_method: 'pix' | 'card' | 'cash';
 }
 
 interface Props {
@@ -35,45 +27,16 @@ interface Props {
 }
 
 export default function Acompanhamento({ appointment, shop }: Props) {
-    const pending = appointment.status === 'pending_payment';
-
-    // o webhook pode atrasar: enquanto pendente, a tela pergunta o status a cada 3s
-    useEffect(() => {
-        if (!pending) {
-            return;
-        }
-
-        const timer = window.setInterval(async () => {
-            const response = await fetch(`/agendamentos/${appointment.token}/status`, { headers: { Accept: 'application/json' } });
-            const payload = await response.json();
-
-            if (payload.status !== 'pending_payment') {
-                router.reload();
-            }
-        }, 3000);
-
-        return () => window.clearInterval(timer);
-    }, [pending, appointment.token]);
-
     return (
         <div className="bg-background text-foreground min-h-svh">
-            <Head title={pending ? 'Pagamento' : appointment.status_label} />
+            <Head title={appointment.status_label} />
 
             <header className="border-border/80 border-b px-4 py-5">
                 <BrandMark />
             </header>
 
             <main className="mx-auto w-full max-w-xl space-y-6 px-4 py-8">
-                {pending ? (
-                    <>
-                        <div>
-                            <p className="eyebrow">Passo 05 · Pagamento</p>
-                            <h1 className="mt-1 text-[1.75rem] leading-tight">Falta pagar para confirmar</h1>
-                        </div>
-                        <Summary appointment={appointment} />
-                        <PaymentPanel appointment={appointment} />
-                    </>
-                ) : appointment.status === 'confirmed' || appointment.status === 'attended' ? (
+                {appointment.status === 'confirmed' || appointment.status === 'attended' ? (
                     <>
                         <div className="flex flex-col items-center gap-3 text-center">
                             <CheckCircle2 className="text-success size-10" />
@@ -104,7 +67,7 @@ export default function Acompanhamento({ appointment, shop }: Props) {
                                 onClick={() => router.post(`/agendamentos/${appointment.token}/cancelar`)}
                                 className="text-muted-foreground hover:text-destructive w-full text-center text-xs underline underline-offset-4"
                             >
-                                Cancelar com estorno integral (até {shop.cancel_window_hours}h antes)
+                                Cancelar agendamento
                             </button>
                         )}
                     </>
@@ -114,9 +77,7 @@ export default function Acompanhamento({ appointment, shop }: Props) {
                             <XCircle className="text-destructive size-10" />
                             <h1 className="text-[1.75rem] leading-tight">{appointment.status_label}</h1>
                             <p className="text-muted-foreground text-sm">
-                                {appointment.status === 'expired'
-                                    ? 'A reserva venceu antes do pagamento e o horário voltou para a agenda.'
-                                    : 'Esse agendamento não está mais valendo.'}
+                                'Esse agendamento não está mais valendo.'
                             </p>
                         </div>
 

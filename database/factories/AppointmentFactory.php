@@ -32,6 +32,7 @@ class AppointmentFactory extends Factory
             'price_cents' => 4500,
             'duration_min' => $duration,
             'confirmed_at' => now(),
+            'payment_method' => 'cash',
         ];
     }
 
@@ -47,21 +48,11 @@ class AppointmentFactory extends Factory
         ]);
     }
 
-    public function pending(): static
-    {
-        return $this->state([
-            'status' => AppointmentStatus::PendingPayment,
-            'confirmed_at' => null,
-            'reserved_until' => now()->addMinutes(config('barbearia.reservation_ttl_min')),
-        ]);
-    }
-
     public function expired(): static
     {
         return $this->state([
             'status' => AppointmentStatus::Expired,
             'confirmed_at' => null,
-            'reserved_until' => now()->subMinute(),
         ]);
     }
 

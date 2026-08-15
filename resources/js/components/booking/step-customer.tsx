@@ -1,17 +1,15 @@
 import { OptionCard } from '@/components/booking/option-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { brl, duration, longDate, maskCpf, maskPhone } from '@/lib/format';
-import type { AvailabilitySlot, Service, Shop } from '@/types/booking';
-import { CreditCard, QrCode } from 'lucide-react';
+import { brl, duration, longDate, maskPhone } from '@/lib/format';
+import type { AvailabilitySlot, Service } from '@/types/booking';
+import { Banknote, CreditCard, QrCode } from 'lucide-react';
 
 export interface CustomerForm {
     name: string;
     phone: string;
-    document: string;
-    email: string;
     note: string;
-    billing_type: 'PIX' | 'CREDIT_CARD';
+    payment_method: 'pix' | 'card' | 'cash';
 }
 
 interface Props {
@@ -20,11 +18,10 @@ interface Props {
     service: Service;
     slot: AvailabilitySlot;
     date: string;
-    shop: Shop;
     onChange: (patch: Partial<CustomerForm>) => void;
 }
 
-export function StepCustomer({ form, errors, service, slot, date, shop, onChange }: Props) {
+export function StepCustomer({ form, errors, service, slot, date, onChange }: Props) {
     return (
         <div className="space-y-6">
             <div className="border-border bg-card rounded-[1.125rem] border p-4">
@@ -50,24 +47,6 @@ export function StepCustomer({ form, errors, service, slot, date, shop, onChange
                     />
                 </Field>
 
-                <Field label="CPF" error={errors.document} hint="Exigido pelo gateway em Pix e cartão.">
-                    <Input
-                        value={form.document}
-                        onChange={(event) => onChange({ document: maskCpf(event.target.value) })}
-                        inputMode="numeric"
-                        placeholder="000.000.000-00"
-                    />
-                </Field>
-
-                <Field label="E-mail" error={errors.email} hint="Para receber a confirmação.">
-                    <Input
-                        type="email"
-                        value={form.email}
-                        onChange={(event) => onChange({ email: event.target.value })}
-                        placeholder="voce@email.com"
-                    />
-                </Field>
-
                 <Field label="Observação" error={errors.note} hint="Opcional.">
                     <Input
                         value={form.note}
@@ -78,33 +57,40 @@ export function StepCustomer({ form, errors, service, slot, date, shop, onChange
             </div>
 
             <div className="space-y-3">
-                <p className="eyebrow">Como você prefere pagar</p>
+                <p className="eyebrow">Como você pretende pagar</p>
 
-                <OptionCard selected={form.billing_type === 'PIX'} onClick={() => onChange({ billing_type: 'PIX' })}>
+                <OptionCard selected={form.payment_method === 'pix'} onClick={() => onChange({ payment_method: 'pix' })}>
                     <div className="flex items-center gap-3">
                         <QrCode className="text-primary size-5" />
                         <div>
                             <p className="font-display text-base font-semibold">Pix</p>
-                            <p className="text-muted-foreground text-sm">Confirma em segundos</p>
+                            <p className="text-muted-foreground text-sm">Estimativa para o atendimento</p>
                         </div>
                     </div>
                 </OptionCard>
 
-                <OptionCard selected={form.billing_type === 'CREDIT_CARD'} onClick={() => onChange({ billing_type: 'CREDIT_CARD' })}>
+                <OptionCard selected={form.payment_method === 'card'} onClick={() => onChange({ payment_method: 'card' })}>
                     <div className="flex items-center gap-3">
                         <CreditCard className="text-primary size-5" />
                         <div>
                             <p className="font-display text-base font-semibold">Cartão de crédito</p>
-                            <p className="text-muted-foreground text-sm">Você paga em uma página segura do Asaas</p>
+                            <p className="text-muted-foreground text-sm">Estimativa para o atendimento</p>
                         </div>
                     </div>
                 </OptionCard>
             </div>
 
-            <p className="text-muted-foreground text-xs">
-                O horário só é confirmado depois do pagamento aprovado. Cancelamento com estorno integral até {shop.cancel_window_hours}h antes do
-                atendimento.
-            </p>
+            <OptionCard selected={form.payment_method === 'cash'} onClick={() => onChange({ payment_method: 'cash' })}>
+                <div className="flex items-center gap-3">
+                    <Banknote className="text-primary size-5" />
+                    <div>
+                        <p className="font-display text-base font-semibold">Dinheiro</p>
+                        <p className="text-muted-foreground text-sm">Estimativa para o atendimento</p>
+                    </div>
+                </div>
+            </OptionCard>
+
+            <p className="text-muted-foreground text-xs">O agendamento é confirmado agora. O preço exibido é apenas referencial.</p>
         </div>
     );
 }

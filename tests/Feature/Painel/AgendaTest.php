@@ -4,7 +4,6 @@ namespace Tests\Feature\Painel;
 
 use App\Enums\AppointmentOrigin;
 use App\Enums\AppointmentStatus;
-use App\Enums\PaymentStatus;
 use App\Models\Appointment;
 use App\Models\Barber;
 use App\Models\Customer;
@@ -84,39 +83,26 @@ class AgendaTest extends TestCase
                 ->where('totals.confirmed', 1)
                 ->where('totals.attended', 1)
                 ->where('totals.canceled', 1)
-                ->where('totals.expected_cents', 9000)
-                ->where('totals.received_cents', 4500)
+                ->where('totals.estimated_cents', 9000)
                 ->where('can.see_revenue', true));
     }
 
-    /** Previsto = tudo que o dia promete; recebido = o que de fato ficou no caixa. */
-    public function test_previsto_soma_o_dia_e_recebido_so_o_que_entrou(): void
+    /** O painel mostra valor estimado, sem inferir recebimento. */
+    public function test_valor_estimado_soma_atendimentos_e_agendamentos_validos(): void
     {
         $barber = $this->barber();
         $service = Service::factory()->create(['duration_min' => 30, 'price_cents' => 4500]);
         $make = fn (string $time) => Appointment::factory()->for($barber)->for($service)->at($this->at($time));
 
-        $make('08:00')->pending()->create();       // conta a receber → previsto
+        $make('08:00')->create();                  // confirmado → estimado
         $make('09:00')->create();                  // confirmado     → previsto
         $make('10:00')->noShow()->create();        // faltou         → previsto
         $make('11:00')->attended()->create();      // compareceu     → previsto e recebido
-        $paid = $make('12:00')->canceled()->create();
-        $refunded = $make('13:00')->canceled()->create();
-
-        $paid->payment()->create([
-            'provider_payment_id' => 'pay_ok', 'billing_type' => 'PIX',
-            'status' => PaymentStatus::Confirmed, 'amount_cents' => 4500,
-        ]);
-        $refunded->payment()->create([
-            'provider_payment_id' => 'pay_back', 'billing_type' => 'PIX',
-            'status' => PaymentStatus::Refunded, 'amount_cents' => 4500,
-        ]);
 
         $this->actingAs($this->owner())
             ->get('/painel/agenda?date=2026-09-02')
             ->assertInertia(fn ($page) => $page
-                ->where('totals.expected_cents', 18000)  // pendente + confirmado + falta + compareceu
-                ->where('totals.received_cents', 9000)); // compareceu + cancelado sem estorno
+                ->where('totals.estimated_cents', 18000));
     }
 
     public function test_barbeiro_ve_so_a_propria_agenda_e_sem_faturamento(): void
@@ -136,7 +122,7 @@ class AgendaTest extends TestCase
                 ->has('rows', 1)
                 ->where('rows.0.barber_id', $mine->id)
                 ->where('can.see_revenue', false)
-                ->missing('totals.expected_cents'));
+                ->missing('totals.estimated_cents'));
     }
 
     public function test_marca_comparecimento_e_atualiza_a_ultima_visita(): void
@@ -212,42 +198,16 @@ class AgendaTest extends TestCase
         $this->assertSame(AppointmentStatus::Confirmed, $appointment->refresh()->status);
     }
 
-    public function test_cancelamento_com_estorno_chama_o_asaas(): void
+    public function test_cancelamento_nao_faz_chamada_a_provedor(): void
     {
         Http::fake(['*' => Http::response(['id' => 'pay_123', 'status' => 'REFUNDED'])]);
 
         $appointment = Appointment::factory()->for($this->barber())->at($this->at('10:00'))->create();
-        $appointment->payment()->create([
-            'provider_payment_id' => 'pay_123',
-            'billing_type' => 'PIX',
-            'amount_cents' => 4500,
-            'status' => PaymentStatus::Confirmed,
-        ]);
-
         $this->actingAs($this->owner())
-            ->post("/painel/agendamentos/{$appointment->id}/cancelar", ['reason' => 'Cliente avisou', 'refund' => true])
+            ->post("/painel/agendamentos/{$appointment->id}/cancelar", ['reason' => 'Cliente avisou'])
             ->assertRedirect();
 
         $this->assertSame(AppointmentStatus::Canceled, $appointment->refresh()->status);
-        $this->assertSame(PaymentStatus::Refunded, $appointment->payment->refresh()->status);
-        Http::assertSent(fn ($request) => str_contains($request->url(), '/payments/pay_123/refund'));
-    }
-
-    public function test_cancelamento_sem_estorno_nao_devolve_dinheiro(): void
-    {
-        Http::fake();
-
-        $appointment = Appointment::factory()->for($this->barber())->at($this->at('10:00'))->create();
-        $appointment->payment()->create([
-            'provider_payment_id' => 'pay_123',
-            'billing_type' => 'PIX',
-            'amount_cents' => 4500,
-            'status' => PaymentStatus::Confirmed,
-        ]);
-
-        $this->actingAs($this->owner())->post("/painel/agendamentos/{$appointment->id}/cancelar", ['refund' => false]);
-
-        $this->assertSame(PaymentStatus::Confirmed, $appointment->payment->refresh()->status);
         Http::assertNothingSent();
     }
 
@@ -263,6 +223,7 @@ class AgendaTest extends TestCase
             'time' => '15:00',
             'name' => 'João da Esquina',
             'phone' => '(31) 98888-7777',
+            'payment_method' => 'cash',
         ])->assertRedirect();
 
         $appointment = Appointment::firstOrFail();
@@ -287,6 +248,7 @@ class AgendaTest extends TestCase
             'time' => '15:15',
             'name' => 'João da Esquina',
             'phone' => '(31) 98888-7777',
+            'payment_method' => 'cash',
         ])->assertSessionHasErrors('time');
 
         $this->assertSame(1, Appointment::count());
@@ -344,6 +306,49 @@ class AgendaTest extends TestCase
             '2026-09-05 12:00',
             '2026-09-06 12:00',
         ], $dias);
+    }
+
+    public function test_listagem_mostra_o_periodo_do_bloqueio(): void
+    {
+        $owner = $this->owner();
+        $barber = $this->barber();
+
+        $this->actingAs($owner)->post('/painel/bloqueios', [
+            'barber_id' => $barber->id,
+            'date' => '2026-09-02',
+            'until' => '2026-09-06',
+            'starts' => '12:00',
+            'ends' => '13:00',
+            'reason' => 'Férias',
+        ])->assertRedirect();
+
+        $this->actingAs($owner)
+            ->get('/painel/agenda?date=2026-09-04')
+            ->assertInertia(fn ($page) => $page
+                ->where('blocks.0.first_day', '02/09')
+                ->where('blocks.0.last_day', '06/09')
+                ->where('blocks.0.days', 5)
+                ->where('blocks.0.starts_at', '12:00')
+                ->where('blocks.0.ends_at', '13:00'));
+    }
+
+    public function test_remover_bloqueio_de_periodo_apaga_todos_os_dias(): void
+    {
+        $barber = $this->barber();
+
+        $this->actingAs($this->owner())->post('/painel/bloqueios', [
+            'barber_id' => $barber->id,
+            'date' => '2026-09-02',
+            'until' => '2026-09-06',
+            'starts' => '12:00',
+            'ends' => '13:00',
+        ])->assertRedirect();
+
+        $block = TimeBlock::orderBy('starts_at')->skip(2)->firstOrFail();
+
+        $this->actingAs($this->owner())->delete("/painel/bloqueios/{$block->id}")->assertRedirect();
+
+        $this->assertSame(0, TimeBlock::count());
     }
 
     public function test_periodo_invertido_devolve_erro_em_portugues(): void

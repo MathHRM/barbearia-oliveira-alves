@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 class Appointment extends Model
@@ -20,7 +19,7 @@ class Appointment extends Model
         'customer_id', 'barber_id', 'service_id',
         'starts_at', 'ends_at', 'status', 'origin',
         'price_cents', 'duration_min', 'customer_note',
-        'reserved_until', 'confirmed_at', 'attended_at',
+        'payment_method', 'confirmed_at', 'attended_at',
         'canceled_at', 'cancel_reason', 'canceled_by', 'public_token',
     ];
 
@@ -29,7 +28,6 @@ class Appointment extends Model
         return [
             'starts_at' => UtcDateTime::class,
             'ends_at' => UtcDateTime::class,
-            'reserved_until' => UtcDateTime::class,
             'confirmed_at' => UtcDateTime::class,
             'attended_at' => UtcDateTime::class,
             'canceled_at' => UtcDateTime::class,
@@ -62,11 +60,6 @@ class Appointment extends Model
         return $this->belongsTo(Service::class);
     }
 
-    public function payment(): HasOne
-    {
-        return $this->hasOne(Payment::class)->latestOfMany();
-    }
-
     /** Agendamentos que ocupam o slot — espelha a constraint EXCLUDE. */
     public function scopeBlocking(Builder $query): Builder
     {
@@ -76,14 +69,6 @@ class Appointment extends Model
     public function scopeBetween(Builder $query, $from, $to): Builder
     {
         return $query->where('starts_at', '<', $to)->where('ends_at', '>', $from);
-    }
-
-    /** Reserva que estourou o TTL sem o pagamento voltar aprovado. */
-    public function isReservationExpired(): bool
-    {
-        return $this->status === AppointmentStatus::PendingPayment
-            && $this->reserved_until !== null
-            && $this->reserved_until->isPast();
     }
 
     /** Cliente só cancela sozinho dentro da janela configurada. */

@@ -64,20 +64,18 @@ class AppointmentController extends Controller
         return back()->with('success', 'Marcado como falta.');
     }
 
-    /** O estorno é decisão do barbeiro — nada é devolvido sem o check na tela. */
+    /** Cancelamento libera o horário; o método informado não representa pagamento recebido. */
     public function cancel(Request $request, Appointment $appointment, CancelAppointment $action): RedirectResponse
     {
         $this->authorizeManage($request, $appointment);
 
         $validated = $request->validate([
             'reason' => ['nullable', 'string', 'max:200'],
-            'refund' => ['boolean'],
         ]);
 
         $action->handle(
             $appointment,
             $validated['reason'] ?? 'Cancelado pelo painel',
-            (bool) ($validated['refund'] ?? false),
             $request->user(),
         );
 

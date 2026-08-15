@@ -1,8 +1,8 @@
 # Barbearia Oliveira Alves
 
-Agendamento online com pagamento antecipado + painel de gestão do barbeiro.
+Agendamento online confirmado na hora + painel de gestão do barbeiro.
 
-Laravel 12 · Inertia · React 19 · TypeScript · shadcn/ui · Tailwind 4 · PostgreSQL 16 · Asaas · Render.
+Laravel 12 · Inertia · React 19 · TypeScript · shadcn/ui · Tailwind 4 · PostgreSQL 16 · Render.
 
 Spec completa do sistema: [`SPEC.md`](SPEC.md).
 
@@ -27,7 +27,7 @@ Primeira subida leva alguns minutos (build da imagem + `composer install` + `npm
 | `app` | http://localhost:8010 | FrankenPHP servindo o Laravel |
 | `vite` | http://localhost:5183 | dev server do front (HMR) |
 | `queue` | — | `queue:work`, processa e-mails e jobs |
-| `scheduler` | — | `schedule:work`, expira reservas e dispara lembretes |
+| `scheduler` | — | `schedule:work`, dispara lembretes |
 | `postgres` | `localhost:5433` | banco (usuário/senha/base: `barbearia` / `secret` / `barbearia`) |
 
 Abra **http://localhost:8010**. O `app` só sobe depois do Postgres ficar saudável, e roda
@@ -70,11 +70,7 @@ Além do padrão do Laravel:
 
 | Var | Default | O quê |
 |---|---|---|
-| `ASAAS_ENV` | `sandbox` | `sandbox` ou `production` |
-| `ASAAS_API_KEY` | — | chave da API do Asaas |
-| `ASAAS_WEBHOOK_TOKEN` | — | token esperado no header `asaas-access-token` |
-| `BARBEARIA_RESERVATION_TTL_MIN` | `10` | minutos que o slot fica preso esperando pagamento |
-| `BARBEARIA_CANCEL_WINDOW_HOURS` | `12` | prazo para o cliente cancelar com estorno integral |
+| `BARBEARIA_CANCEL_WINDOW_HOURS` | `12` | prazo para o cliente cancelar |
 | `BARBEARIA_MIN_LEAD_MIN` | `60` | antecedência mínima para agendar |
 | `BARBEARIA_HORIZON_DAYS` | `21` | até quantos dias à frente a agenda abre |
 | `BARBEARIA_SLOT_STEP_MIN` | `15` | granularidade dos horários |
@@ -99,15 +95,6 @@ Rodam contra Postgres de verdade (a exclusividade de slot depende de
 ```bash
 docker compose exec postgres psql -U barbearia -d postgres -c "CREATE DATABASE barbearia_test OWNER barbearia"
 docker compose exec app php artisan test
-```
-
-### Webhook do Asaas em desenvolvimento
-
-O Asaas precisa alcançar a máquina. Exponha a porta 8010 com um túnel e aponte o
-webhook para `https://<seu-tunel>/webhooks/asaas`:
-
-```bash
-docker run --rm -it --network host ngrok/ngrok http 8010
 ```
 
 ---

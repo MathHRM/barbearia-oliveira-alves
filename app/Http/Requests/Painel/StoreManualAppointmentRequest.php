@@ -18,6 +18,7 @@ class StoreManualAppointmentRequest extends FormRequest
             'name' => ['required', 'string', 'min:2', 'max:120'],
             'phone' => ['required', 'string', 'max:30'],
             'note' => ['nullable', 'string', 'max:500'],
+            'payment_method' => ['required', 'in:pix,card,cash'],
         ];
     }
 

@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /** Bloqueio pontual ou de período: some da agenda pública assim que salva. */
 class TimeBlockController extends Controller
@@ -42,12 +43,15 @@ class TimeBlockController extends Controller
             return back()->withErrors(['until' => 'O período não pode passar de '.self::MAX_DAYS.' dias.']);
         }
 
-        DB::transaction(function () use ($first, $days, $barberId, $validated, $request, $tz) {
+        $periodId = (string) Str::uuid();
+
+        DB::transaction(function () use ($first, $days, $barberId, $periodId, $validated, $request, $tz) {
             for ($offset = 0; $offset < $days; $offset++) {
                 $day = $first->copy()->addDays($offset)->format('Y-m-d');
 
                 TimeBlock::create([
                     'barber_id' => $barberId,
+                    'period_id' => $periodId,
                     'starts_at' => Carbon::parse($day.' '.$validated['starts'], $tz),
                     'ends_at' => Carbon::parse($day.' '.$validated['ends'], $tz),
                     'reason' => $validated['reason'] ?? null,
@@ -65,8 +69,11 @@ class TimeBlockController extends Controller
 
         abort_unless($scope->isOwner() || $block->barber_id === $scope->ownBarberId(), 403);
 
-        $block->delete();
+        // a lista mostra o período inteiro numa linha; remover tem que casar com o que se vê
+        $removed = $block->period_id
+            ? TimeBlock::where('period_id', $block->period_id)->delete()
+            : $block->delete();
 
-        return back()->with('success', 'Bloqueio removido.');
+        return back()->with('success', $removed > 1 ? 'Período desbloqueado.' : 'Bloqueio removido.');
     }
 }

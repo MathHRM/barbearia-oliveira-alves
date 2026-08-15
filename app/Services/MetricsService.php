@@ -8,8 +8,7 @@ use App\Models\Customer;
 use Illuminate\Support\Carbon;
 
 /**
- * Números do dashboard. Tudo é lido dos agendamentos — faturamento sai do que
- * realmente aconteceu (`attended`), não do que foi marcado.
+ * Números referenciais do dashboard, baseados nos atendimentos realizados.
  */
 class MetricsService
 {
@@ -31,9 +30,9 @@ class MetricsService
         $churnBefore = $this->churnAt(now()->subDays($length));
 
         return [
-            'revenue_cents' => ['value' => $current['revenue'], 'delta' => $this->delta($current['revenue'], $previous['revenue'])],
+            'estimated_cents' => ['value' => $current['estimated'], 'delta' => $this->delta($current['estimated'], $previous['estimated'])],
             'appointments' => ['value' => $current['appointments'], 'delta' => $this->delta($current['appointments'], $previous['appointments'])],
-            'ticket_cents' => ['value' => $current['ticket'], 'delta' => $this->delta($current['ticket'], $previous['ticket'])],
+            'average_cents' => ['value' => $current['average'], 'delta' => $this->delta($current['average'], $previous['average'])],
             'churn_rate' => ['value' => $churn, 'delta' => $this->delta($churn, $churnBefore)],
             'no_show_rate' => ['value' => $current['no_show_rate'], 'delta' => $this->delta($current['no_show_rate'], $previous['no_show_rate'])],
         ];
@@ -53,13 +52,13 @@ class MetricsService
 
         $attended = $count(AppointmentStatus::Attended);
         $noShow = $count(AppointmentStatus::NoShow);
-        $revenue = (int) ($rows[AppointmentStatus::Attended->value]->amount ?? 0);
+        $estimated = (int) ($rows[AppointmentStatus::Attended->value]->amount ?? 0);
 
         return [
-            'revenue' => $revenue,
+            'estimated' => $estimated,
             // agendamentos = tudo que chegou a valer horário no período
-            'appointments' => $attended + $noShow + $count(AppointmentStatus::Confirmed) + $count(AppointmentStatus::PendingPayment),
-            'ticket' => $attended === 0 ? 0 : (int) round($revenue / $attended),
+            'appointments' => $attended + $noShow + $count(AppointmentStatus::Confirmed),
+            'average' => $attended === 0 ? 0 : (int) round($estimated / $attended),
             'no_show_rate' => ($attended + $noShow) === 0 ? 0.0 : round($noShow * 100 / ($attended + $noShow), 1),
         ];
     }
@@ -89,11 +88,11 @@ class MetricsService
     }
 
     /**
-     * Faturamento por semana (segunda a domingo), da mais antiga para a mais nova.
+     * Valor estimado por semana (segunda a domingo), da mais antiga para a mais nova.
      *
-     * @return list<array{label: string, revenue_cents: int, appointments: int}>
+     * @return list<array{label: string, estimated_cents: int, appointments: int}>
      */
-    public function revenueByWeek(int $weeks = 12): array
+    public function estimatedByWeek(int $weeks = 12): array
     {
         $tz = config('barbearia.timezone');
         // segunda-feira, igual ao date_trunc('week') do Postgres
@@ -117,7 +116,7 @@ class MetricsService
 
             $weekly[] = [
                 'label' => $week->format('d/m'),
-                'revenue_cents' => (int) ($row->amount ?? 0),
+                'estimated_cents' => (int) ($row->amount ?? 0),
                 'appointments' => (int) ($row->total ?? 0),
             ];
         }
@@ -145,7 +144,7 @@ class MetricsService
         ];
     }
 
-    /** Serviços que mais faturaram no período — ajuda a decidir preço e agenda. */
+    /** Serviços mais realizados, com valor estimado no período. */
     public function topServices(Carbon $from, Carbon $to, int $limit = 5): array
     {
         return Appointment::query()
@@ -160,7 +159,7 @@ class MetricsService
             ->map(fn ($row) => [
                 'name' => $row->name,
                 'appointments' => (int) $row->total,
-                'revenue_cents' => (int) $row->amount,
+                'estimated_cents' => (int) $row->amount,
             ])
             ->all();
     }

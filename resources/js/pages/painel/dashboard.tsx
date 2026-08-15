@@ -15,15 +15,15 @@ interface Props {
     ranges: string[];
     period: { from: string; to: string };
     kpis: {
-        revenue_cents: Kpi;
+        estimated_cents: Kpi;
         appointments: Kpi;
-        ticket_cents: Kpi;
+        average_cents: Kpi;
         churn_rate: Kpi;
         no_show_rate: Kpi;
     };
-    weekly: { label: string; revenue_cents: number; appointments: number }[];
+    weekly: { label: string; estimated_cents: number; appointments: number }[];
     retention: { recent_30: number; recent_60: number; lost: number; total: number };
-    services: { name: string; appointments: number; revenue_cents: number }[];
+    services: { name: string; appointments: number; estimated_cents: number }[];
     churn_days: number;
 }
 
@@ -52,9 +52,9 @@ export default function Dashboard({ range, ranges, period, kpis, weekly, retenti
             <Head title="Dashboard" />
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <StatCard label="Faturamento" value={brl(kpis.revenue_cents.value)} delta={kpis.revenue_cents.delta} />
+                <StatCard label="Valor estimado dos atendimentos" value={brl(kpis.estimated_cents.value)} delta={kpis.estimated_cents.delta} />
                 <StatCard label="Agendamentos" value={String(kpis.appointments.value)} delta={kpis.appointments.delta} />
-                <StatCard label="Ticket médio" value={brl(kpis.ticket_cents.value)} delta={kpis.ticket_cents.delta} />
+                <StatCard label="Valor médio por atendimento" value={brl(kpis.average_cents.value)} delta={kpis.average_cents.delta} />
                 <StatCard
                     label={`Churn ${churn_days} dias`}
                     value={`${kpis.churn_rate.value}%`}
@@ -65,7 +65,7 @@ export default function Dashboard({ range, ranges, period, kpis, weekly, retenti
 
             <section className="border-border bg-card mt-6 rounded-[1.125rem] border p-5">
                 <div className="mb-5 flex items-baseline justify-between">
-                    <p className="eyebrow">Faturamento por semana</p>
+                    <p className="eyebrow">Valor estimado por semana</p>
                     <p className="text-muted-foreground text-xs">Últimas {weekly.length} semanas · só atendimentos concluídos</p>
                 </div>
                 <BarChart data={weekly} />
@@ -86,7 +86,7 @@ export default function Dashboard({ range, ranges, period, kpis, weekly, retenti
 
                 <section className="border-border bg-card rounded-[1.125rem] border p-5">
                     <div className="flex items-baseline justify-between">
-                        <p className="eyebrow">Serviços que mais faturaram</p>
+                    <p className="eyebrow">Serviços mais realizados</p>
                         <p className="tabular text-muted-foreground text-xs">No-show {kpis.no_show_rate.value}%</p>
                     </div>
 
@@ -98,7 +98,7 @@ export default function Dashboard({ range, ranges, period, kpis, weekly, retenti
                                 <li key={service.name} className="flex items-center justify-between gap-3 text-sm">
                                     <span className="min-w-0 truncate">{service.name}</span>
                                     <span className="text-muted-foreground tabular shrink-0 text-xs">
-                                        {service.appointments}x · <span className="text-foreground">{brl(service.revenue_cents)}</span>
+                                        {service.appointments}x · <span className="text-foreground">{brl(service.estimated_cents)}</span>
                                     </span>
                                 </li>
                             ))}

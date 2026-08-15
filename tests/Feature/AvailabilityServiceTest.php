@@ -128,14 +128,14 @@ class AvailabilityServiceTest extends TestCase
         $this->assertSame(['09:00'], $this->times($this->slotsFor($service, $barber->id, '2026-09-03')));
     }
 
-    public function test_trata_reserva_pendente_como_ocupada(): void
+    public function test_trata_agendamento_confirmado_como_ocupado(): void
     {
         $this->freezeNow();
 
         $barber = $this->barberWithHours([['09:00', '10:00']]);
         $service = Service::factory()->create(['duration_min' => 60]);
 
-        Appointment::factory()->for($barber)->pending()->at($this->local('2026-09-03 09:00'), 60)->create();
+        Appointment::factory()->for($barber)->at($this->local('2026-09-03 09:00'), 60)->create();
 
         $this->assertCount(0, $this->slotsFor($service, $barber->id, '2026-09-03'));
     }

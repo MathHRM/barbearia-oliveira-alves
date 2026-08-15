@@ -4,7 +4,6 @@ namespace App\Enums;
 
 enum AppointmentStatus: string
 {
-    case PendingPayment = 'pending_payment';
     case Confirmed = 'confirmed';
     case Attended = 'attended';
     case NoShow = 'no_show';
@@ -14,7 +13,7 @@ enum AppointmentStatus: string
     /** Status que seguram o slot — os mesmos da constraint EXCLUDE no banco. */
     public static function blocking(): array
     {
-        return [self::PendingPayment, self::Confirmed, self::Attended];
+        return [self::Confirmed, self::Attended];
     }
 
     public static function blockingValues(): array
@@ -25,7 +24,6 @@ enum AppointmentStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::PendingPayment => 'Aguardando pagamento',
             self::Confirmed => 'Confirmado',
             self::Attended => 'Compareceu',
             self::NoShow => 'Faltou',
@@ -40,7 +38,6 @@ enum AppointmentStatus: string
         return match ($this) {
             self::Confirmed => 'brand',
             self::Attended => 'success',
-            self::PendingPayment => 'warning',
             self::Canceled, self::NoShow, self::Expired => 'danger',
         };
     }

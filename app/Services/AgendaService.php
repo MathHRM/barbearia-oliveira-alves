@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\AppointmentStatus;
-use App\Enums\PaymentStatus;
 use App\Models\Appointment;
 use App\Models\Service;
 use App\Models\TimeBlock;
@@ -30,7 +29,7 @@ class AgendaService
         [$from, $to] = $this->dayWindow($date);
 
         return Appointment::query()
-            ->with(['customer', 'barber', 'service', 'payment'])
+            ->with(['customer', 'barber', 'service'])
             ->whereBetween('starts_at', [$from, $to])
             ->when($barberId, fn ($query) => $query->where('barber_id', $barberId))
             ->orderBy('starts_at')
@@ -43,26 +42,61 @@ class AgendaService
     {
         [$from, $to] = $this->dayWindow($date);
 
-        return TimeBlock::query()
+        $blocks = TimeBlock::query()
             ->with(['barber', 'creator'])
             ->where('starts_at', '<', $to)
             ->where('ends_at', '>', $from)
             ->when($barberId, fn ($query) => $query->where('barber_id', $barberId))
             ->orderBy('starts_at')
-            ->get()
-            ->map(fn (TimeBlock $block) => [
+            ->get();
+
+        $periods = $this->periodSpans($blocks);
+
+        return $blocks->map(function (TimeBlock $block) use ($periods) {
+            $span = $periods[$block->period_id] ?? null;
+            // agregado volta como string crua em UTC — o cast do model não passa por aqui
+            $first = $this->local($span ? Carbon::parse($span->first_day, 'UTC') : $block->starts_at);
+            $last = $this->local($span ? Carbon::parse($span->last_day, 'UTC') : $block->starts_at);
+
+            return [
                 'id' => $block->id,
                 'barber' => $block->barber->display_name,
                 'starts_at' => $this->local($block->starts_at)->format('H:i'),
                 'ends_at' => $this->local($block->ends_at)->format('H:i'),
+                'first_day' => $first->format('d/m'),
+                'last_day' => $last->format('d/m'),
+                'days' => $span ? (int) $span->days : 1,
                 'reason' => $block->reason,
                 'created_by' => $block->creator?->name,
                 'created_at' => $this->local($block->created_at)->format('d/m H:i'),
-            ]);
+            ];
+        });
     }
 
     /**
-     * "Hoje em números". Receita só entra na tela do dono — o scope decide.
+     * Férias viram uma linha por dia — o period_id devolve o intervalo original.
+     *
+     * @param  Collection<int, TimeBlock>  $blocks
+     * @return Collection<string, object>
+     */
+    private function periodSpans(Collection $blocks): Collection
+    {
+        $ids = $blocks->pluck('period_id')->filter()->unique()->values();
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        return TimeBlock::query()
+            ->selectRaw('period_id, min(starts_at) as first_day, max(starts_at) as last_day, count(*) as days')
+            ->whereIn('period_id', $ids)
+            ->groupBy('period_id')
+            ->get()
+            ->keyBy('period_id');
+    }
+
+    /**
+     * "Hoje em números". O valor referencial só entra na tela do dono — o scope decide.
      *
      * @param  Collection<int, array<string, mixed>>  $rows
      * @return array<string, int>
@@ -74,20 +108,14 @@ class AgendaService
         return [
             'total' => $rows->count(),
             'confirmed' => $by(AppointmentStatus::Confirmed->value)->count(),
-            'pending' => $by(AppointmentStatus::PendingPayment->value)->count(),
             'attended' => $by(AppointmentStatus::Attended->value)->count(),
             'canceled' => $by(AppointmentStatus::Canceled->value)->count()
                 + $by(AppointmentStatus::NoShow->value)->count(),
-            // previsto = todo o dinheiro do dia, menos o que caiu (cancelado/expirado)
-            'expected_cents' => (int) $rows->whereIn('status', [
-                AppointmentStatus::PendingPayment->value,
+            'estimated_cents' => (int) $rows->whereIn('status', [
                 AppointmentStatus::Confirmed->value,
                 AppointmentStatus::Attended->value,
                 AppointmentStatus::NoShow->value,
             ])->sum('price_cents'),
-            // recebido = quem sentou na cadeira + cancelamento cujo pagamento não foi estornado
-            'received_cents' => (int) $rows->filter(fn (array $row) => $row['status'] === AppointmentStatus::Attended->value
-                || ($row['status'] === AppointmentStatus::Canceled->value && $row['paid']))->sum('price_cents'),
             'free_slots' => $this->freeSlots($date, $barberId),
         ];
     }
@@ -110,8 +138,6 @@ class AgendaService
     private function present(Appointment $appointment): array
     {
         $customer = $appointment->customer;
-        $payment = $appointment->payment;
-
         return [
             'id' => $appointment->id,
             'code' => $appointment->code(),
@@ -133,13 +159,7 @@ class AgendaService
                 'phone' => Phone::format($customer->phone_e164),
                 'visits' => $customer->appointments()->where('status', AppointmentStatus::Attended)->count(),
             ],
-            'payment' => $payment === null ? null : [
-                'billing_type' => $payment->billing_type,
-                'status' => $payment->status->value,
-                'refundable' => $payment->status === PaymentStatus::Confirmed,
-            ],
-            'paid' => $payment?->status === PaymentStatus::Confirmed
-                || ($payment === null && $appointment->status === AppointmentStatus::Attended),
+            'payment_method' => $appointment->payment_method,
             // presença/falta só depois do horário começar — ninguém compareceu a algo que não aconteceu
             'can_attend' => $appointment->starts_at->isPast()
                 && in_array($appointment->status, [AppointmentStatus::Confirmed, AppointmentStatus::NoShow], true),

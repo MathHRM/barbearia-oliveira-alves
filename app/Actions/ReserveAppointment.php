@@ -9,23 +9,20 @@ use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\Service;
 use App\Services\AvailabilityService;
-use App\Support\Document;
 use App\Support\Phone;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Prende o horário antes do pagamento: cria o agendamento em `pending_payment`
- * com TTL. Quem garante a exclusividade é a constraint EXCLUDE — a checagem de
- * disponibilidade aqui é só para devolver erro amigável no caso comum.
+ * Cria o agendamento confirmado; o método de pagamento é apenas analítico.
  */
 class ReserveAppointment
 {
     public function __construct(private readonly AvailabilityService $availability) {}
 
     /**
-     * @param  array{name: string, phone: string, email: ?string, document: ?string, note: ?string}  $customer
+     * @param  array{name: string, phone: string, note: ?string, payment_method: string}  $customer
      *
      * @throws SlotUnavailableException
      */
@@ -51,12 +48,13 @@ class ReserveAppointment
                     'service_id' => $service->id,
                     'starts_at' => $startsAt,
                     'ends_at' => $startsAt->copy()->addMinutes($service->duration_min),
-                    'status' => AppointmentStatus::PendingPayment,
+                    'status' => AppointmentStatus::Confirmed,
                     'origin' => AppointmentOrigin::Online,
                     'price_cents' => $service->price_cents,
                     'duration_min' => $service->duration_min,
                     'customer_note' => $customer['note'] ?? null,
-                    'reserved_until' => now()->addMinutes((int) config('barbearia.reservation_ttl_min')),
+                    'payment_method' => $customer['payment_method'],
+                    'confirmed_at' => now(),
                 ]);
             });
         } catch (QueryException $exception) {
@@ -75,8 +73,6 @@ class ReserveAppointment
 
         $customer = Customer::firstOrNew(['phone_e164' => $phone]);
         $customer->name = $data['name'];
-        $customer->email = $data['email'] ?? $customer->email;
-        $customer->document = Document::digits((string) ($data['document'] ?? '')) ?: $customer->document;
         $customer->first_seen_at ??= now();
         $customer->save();
 

@@ -39,6 +39,7 @@ class CreateManualAppointment
                     'price_cents' => $service->price_cents,
                     'duration_min' => $service->duration_min,
                     'customer_note' => $customer['note'] ?? null,
+                    'payment_method' => $customer['payment_method'],
                     'confirmed_at' => now(),
                 ]);
             });

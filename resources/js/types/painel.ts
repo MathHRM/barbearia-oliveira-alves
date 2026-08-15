@@ -23,8 +23,7 @@ export interface AgendaRow {
     barber_id: number;
     note: string | null;
     customer: AgendaCustomer;
-    payment: { billing_type: string; status: string; refundable: boolean } | null;
-    paid: boolean;
+    payment_method: 'pix' | 'card' | 'cash';
     can_attend: boolean;
     can_no_show: boolean;
     can_cancel: boolean;
@@ -35,6 +34,9 @@ export interface AgendaBlock {
     barber: string;
     starts_at: string;
     ends_at: string;
+    first_day: string;
+    last_day: string;
+    days: number;
     reason: string | null;
     created_by: string | null;
     created_at: string;
@@ -45,12 +47,10 @@ export type { Paginated } from './pagination';
 export interface AgendaTotals {
     total: number;
     confirmed: number;
-    pending: number;
     attended: number;
     canceled: number;
     free_slots: number;
-    expected_cents?: number;
-    received_cents?: number;
+    estimated_cents?: number;
 }
 
 export interface PainelBarber {

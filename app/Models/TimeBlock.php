@@ -11,7 +11,7 @@ class TimeBlock extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['barber_id', 'starts_at', 'ends_at', 'reason', 'created_by'];
+    protected $fillable = ['barber_id', 'period_id', 'starts_at', 'ends_at', 'reason', 'created_by'];
 
     protected function casts(): array
     {

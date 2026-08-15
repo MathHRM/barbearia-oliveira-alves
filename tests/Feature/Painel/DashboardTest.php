@@ -59,12 +59,12 @@ class DashboardTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('painel/dashboard')
                 ->where('range', '30d')
-                ->where('kpis.revenue_cents.value', 8000)
-                ->where('kpis.ticket_cents.value', 4000)
+                ->where('kpis.estimated_cents.value', 8000)
+                ->where('kpis.average_cents.value', 4000)
                 ->where('kpis.appointments.value', 2)
                 ->has('weekly', 12)
                 ->has('services', 1)
-                ->where('services.0.revenue_cents', 8000));
+                ->where('services.0.estimated_cents', 8000));
     }
 
     public function test_churn_conta_quem_nao_volta_ha_mais_de_60_dias(): void
@@ -86,7 +86,7 @@ class DashboardTest extends TestCase
                 ->where('retention.total', 3));
     }
 
-    public function test_faturamento_por_semana_cai_na_semana_certa(): void
+    public function test_valor_estimado_por_semana_cai_na_semana_certa(): void
     {
         // 2026-09-02 é quarta; a semana começa na segunda, 2026-08-31
         $this->attendedAt('2026-08-31 09:00', 4000);
@@ -97,7 +97,7 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('weekly.11.label', '31/08')
-                ->where('weekly.11.revenue_cents', 6000)
-                ->where('weekly.10.revenue_cents', 0));
+                ->where('weekly.11.estimated_cents', 6000)
+                ->where('weekly.10.estimated_cents', 0));
     }
 }

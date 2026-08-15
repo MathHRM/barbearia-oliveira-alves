@@ -25,7 +25,7 @@ interface Props {
     canPickBarber: boolean;
 }
 
-/** Lançamento de balcão: entra confirmado, sem gateway — o caixa resolve o pagamento. */
+/** Lançamento de balcão: entra confirmado, com método de pagamento estimado. */
 export function ManualAppointmentDialog({ date, services, barbers, canPickBarber }: Props) {
     const [open, setOpen] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -36,6 +36,7 @@ export function ManualAppointmentDialog({ date, services, barbers, canPickBarber
         name: '',
         phone: '',
         note: '',
+        payment_method: 'cash',
     });
 
     const submit = () => {
@@ -143,6 +144,20 @@ export function ManualAppointmentDialog({ date, services, barbers, canPickBarber
                             placeholder="(31) 98888-7777"
                         />
                         {errors.phone && <p className="text-destructive text-xs">{errors.phone}</p>}
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label>Método de pagamento estimado</Label>
+                        <select
+                            value={data.payment_method}
+                            onChange={(event) => setData('payment_method', event.target.value as 'pix' | 'card' | 'cash')}
+                            className="border-input bg-background h-10 w-full rounded-md border px-3 text-sm"
+                        >
+                            <option value="pix">Pix</option>
+                            <option value="card">Cartão</option>
+                            <option value="cash">Dinheiro</option>
+                        </select>
+                        {errors.payment_method && <p className="text-destructive text-xs">{errors.payment_method}</p>}
                     </div>
                 </div>
 

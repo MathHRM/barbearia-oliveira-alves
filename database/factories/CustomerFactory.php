@@ -17,7 +17,6 @@ class CustomerFactory extends Factory
             'phone_e164' => '+5511'.fake()->unique()->numerify('9########'),
             'email' => fake()->optional(0.7)->safeEmail(),
             'notes' => null,
-            'asaas_customer_id' => null,
             'first_seen_at' => now()->subDays(fake()->numberBetween(0, 300)),
             'last_visit_at' => null,
         ];

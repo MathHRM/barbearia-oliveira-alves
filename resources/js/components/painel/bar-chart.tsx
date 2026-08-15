@@ -2,13 +2,13 @@ import { brl } from '@/lib/format';
 
 interface Bar {
     label: string;
-    revenue_cents: number;
+    estimated_cents: number;
     appointments: number;
 }
 
 /** Barras em CSS puro — nenhuma lib de gráfico para 12 colunas. */
 export function BarChart({ data }: { data: Bar[] }) {
-    const peak = Math.max(...data.map((bar) => bar.revenue_cents), 1);
+    const peak = Math.max(...data.map((bar) => bar.estimated_cents), 1);
 
     return (
         <div className="flex h-52 items-end gap-2">
@@ -17,10 +17,10 @@ export function BarChart({ data }: { data: Bar[] }) {
                     <div className="relative flex w-full flex-1 items-end">
                         <div
                             className="bg-primary/70 group-hover:bg-primary w-full rounded-t-md transition-all"
-                            style={{ height: `${Math.max((bar.revenue_cents / peak) * 100, 2)}%` }}
+                            style={{ height: `${Math.max((bar.estimated_cents / peak) * 100, 2)}%` }}
                         />
                         <span className="bg-popover border-border tabular pointer-events-none absolute -top-8 left-1/2 hidden -translate-x-1/2 rounded-md border px-2 py-1 text-xs whitespace-nowrap group-hover:block">
-                            {brl(bar.revenue_cents)} · {bar.appointments}x
+                            {brl(bar.estimated_cents)} · {bar.appointments}x
                         </span>
                     </div>
                     <span className="tabular text-muted-foreground truncate text-[0.625rem]">{bar.label}</span>

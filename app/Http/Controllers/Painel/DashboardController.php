@@ -31,7 +31,7 @@ class DashboardController extends Controller
                 'to' => $to->toDateString(),
             ],
             'kpis' => $this->metrics->kpis($from, $to),
-            'weekly' => $this->metrics->revenueByWeek(),
+            'weekly' => $this->metrics->estimatedByWeek(),
             'retention' => $this->metrics->retention(),
             'services' => $this->metrics->topServices($from, $to),
             'churn_days' => (int) config('barbearia.churn_days'),

@@ -10,10 +10,7 @@ return [
     // grade de horários, agenda e exibição usam este fuso.
     'timezone' => env('BARBEARIA_TZ', 'America/Sao_Paulo'),
 
-    // minutos que o slot fica preso enquanto o pagamento não volta aprovado
-    'reservation_ttl_min' => (int) env('BARBEARIA_RESERVATION_TTL_MIN', 10),
-
-    // prazo, em horas antes do atendimento, para o cliente cancelar com estorno integral
+    // prazo, em horas antes do atendimento, para o cliente cancelar
     'cancel_window_hours' => (int) env('BARBEARIA_CANCEL_WINDOW_HOURS', 12),
 
     // antecedência mínima entre agora e o início do horário ofertado
@@ -28,12 +25,4 @@ return [
     // dias sem voltar para o cliente contar como perdido
     'churn_days' => (int) env('BARBEARIA_CHURN_DAYS', 60),
 
-    'asaas' => [
-        'env' => env('ASAAS_ENV', 'sandbox'),
-        'key' => env('ASAAS_API_KEY'),
-        'webhook_token' => env('ASAAS_WEBHOOK_TOKEN'),
-        'base_url' => env('ASAAS_ENV', 'sandbox') === 'production'
-            ? 'https://api.asaas.com/v3'
-            : 'https://api-sandbox.asaas.com/v3',
-    ],
 ];

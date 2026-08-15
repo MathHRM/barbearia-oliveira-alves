@@ -9,7 +9,6 @@ use App\Models\Customer;
 use App\Models\Service;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class ReserveAppointmentTest extends TestCase
@@ -22,12 +21,6 @@ class ReserveAppointmentTest extends TestCase
         // quarta 02/09/2026 08:00 na barbearia; os testes reservam na quinta 03/09
         Carbon::setTestNow(Carbon::parse('2026-09-02 08:00:00', config('barbearia.timezone')));
 
-        // este teste cuida só da reserva; a cobrança tem cobertura própria
-        Http::fake([
-            '*/customers' => Http::response(['id' => 'cus_123']),
-            '*/payments/pay_123/pixQrCode' => Http::response(['payload' => 'copia-e-cola', 'encodedImage' => 'BASE64']),
-            '*/payments' => Http::response(['id' => 'pay_123', 'invoiceUrl' => 'https://asaas.test/i/pay_123']),
-        ]);
     }
 
     protected function tearDown(): void
@@ -55,14 +48,12 @@ class ReserveAppointmentTest extends TestCase
             'starts_at' => Carbon::parse($startsAt, config('barbearia.timezone'))->toIso8601String(),
             'name' => 'Matheus Oliveira',
             'phone' => '(11) 98888-7777',
-            'email' => 'matheus@example.com',
-            'document' => '390.533.447-05',
             'note' => 'Costeleta baixa',
-            'billing_type' => 'PIX',
+            'payment_method' => 'pix',
         ];
     }
 
-    public function test_cria_reserva_pendente_com_ttl_e_preco_congelado(): void
+    public function test_confirma_agendamento_com_metodo_analitico_e_preco_congelado(): void
     {
         $barber = $this->barber();
         $service = Service::factory()->create(['duration_min' => 60, 'price_cents' => 4500]);
@@ -72,11 +63,12 @@ class ReserveAppointmentTest extends TestCase
         $appointment = Appointment::firstOrFail();
 
         $this->assertSame($appointment->public_token, $response->json('token'));
-        $this->assertSame(AppointmentStatus::PendingPayment, $appointment->status);
+        $this->assertSame(AppointmentStatus::Confirmed, $appointment->status);
         $this->assertSame(4500, $appointment->price_cents);
         $this->assertSame(60, $appointment->duration_min);
         $this->assertSame('Costeleta baixa', $appointment->customer_note);
-        $this->assertTrue($appointment->reserved_until->equalTo(now()->addMinutes(config('barbearia.reservation_ttl_min'))));
+        $this->assertSame('pix', $appointment->payment_method);
+        $this->assertNotNull($appointment->confirmed_at);
         $this->assertSame('2026-09-03 12:00', $appointment->starts_at->format('Y-m-d H:i')); // 09:00 em -03:00
     }
 
