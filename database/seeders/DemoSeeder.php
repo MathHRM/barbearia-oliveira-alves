@@ -55,7 +55,6 @@ class DemoSeeder extends Seeder
                         'price_cents' => $service->price_cents,
                         'duration_min' => $service->duration_min,
                         'payment_method' => random_int(1, 3) === 1 ? 'pix' : (random_int(1, 2) === 1 ? 'card' : 'cash'),
-                        'confirmed_at' => $starts->copy()->subDays(2),
                         'attended_at' => $status === AppointmentStatus::Attended ? $starts : null,
                         'canceled_at' => $status === AppointmentStatus::Canceled ? $starts->copy()->subDay() : null,
                     ]);
@@ -69,7 +68,7 @@ class DemoSeeder extends Seeder
     private function status(Carbon $starts): AppointmentStatus
     {
         if ($starts->isFuture()) {
-            return AppointmentStatus::Confirmed;
+            return AppointmentStatus::Scheduled;
         }
 
         return match (true) {

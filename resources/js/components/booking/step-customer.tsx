@@ -89,7 +89,7 @@ export function StepCustomer({ form, errors, service, slot, date, onChange }: Pr
                 </OptionCard>
             </div>
 
-            <p className="text-muted-foreground text-xs">O agendamento é confirmado agora. O preço exibido é apenas referencial.</p>
+            <p className="text-muted-foreground text-xs">O horário fica agendado agora. O preço exibido é apenas referencial.</p>
         </div>
     );
 }

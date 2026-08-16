@@ -15,7 +15,7 @@ return new class extends Migration
 
         DB::statement("UPDATE appointments SET payment_method = CASE WHEN payments.billing_type = 'PIX' THEN 'pix' WHEN payments.billing_type = 'CREDIT_CARD' THEN 'card' ELSE 'cash' END FROM payments WHERE payments.appointment_id = appointments.id AND appointments.payment_method IS NULL");
         DB::table('appointments')->whereNull('payment_method')->update(['payment_method' => 'cash']);
-        DB::table('appointments')->where('status', 'pending_payment')->update(['status' => 'confirmed', 'confirmed_at' => DB::raw('COALESCE(confirmed_at, NOW())')]);
+        DB::table('appointments')->where('status', 'pending_payment')->update(['status' => 'scheduled']);
 
         Schema::table('appointments', function (Blueprint $table) {
             $table->string('payment_method', 10)->nullable(false)->change();
@@ -23,13 +23,13 @@ return new class extends Migration
             $table->dropColumn('reserved_until');
         });
 
-        DB::statement('ALTER TABLE appointments ALTER COLUMN status SET DEFAULT \'confirmed\'');
+        DB::statement('ALTER TABLE appointments ALTER COLUMN status SET DEFAULT \'scheduled\'');
         DB::statement("ALTER TABLE appointments DROP CONSTRAINT IF EXISTS appointments_no_overlap");
         DB::statement(<<<'SQL'
             ALTER TABLE appointments
             ADD CONSTRAINT appointments_no_overlap
             EXCLUDE USING gist (barber_id WITH =, tstzrange(starts_at, ends_at) WITH &&)
-            WHERE (status IN ('confirmed', 'attended'))
+            WHERE (status IN ('scheduled', 'attended'))
         SQL);
 
         Schema::dropIfExists('payments');

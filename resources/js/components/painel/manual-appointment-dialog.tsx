@@ -25,7 +25,7 @@ interface Props {
     canPickBarber: boolean;
 }
 
-/** Lançamento de balcão: entra confirmado, com método de pagamento estimado. */
+/** Lançamento de balcão: entra agendado, com método de pagamento estimado. */
 export function ManualAppointmentDialog({ date, services, barbers, canPickBarber }: Props) {
     const [open, setOpen] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -68,7 +68,7 @@ export function ManualAppointmentDialog({ date, services, barbers, canPickBarber
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Agendamento de balcão</DialogTitle>
-                    <DialogDescription>Cliente que chegou ou ligou. Já entra confirmado.</DialogDescription>
+                    <DialogDescription>Cliente que chegou ou ligou. Já entra agendado.</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">

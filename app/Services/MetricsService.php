@@ -57,7 +57,7 @@ class MetricsService
         return [
             'estimated' => $estimated,
             // agendamentos = tudo que chegou a valer horário no período
-            'appointments' => $attended + $noShow + $count(AppointmentStatus::Confirmed),
+            'appointments' => $attended + $noShow + $count(AppointmentStatus::Scheduled),
             'average' => $attended === 0 ? 0 : (int) round($estimated / $attended),
             'no_show_rate' => ($attended + $noShow) === 0 ? 0.0 : round($noShow * 100 / ($attended + $noShow), 1),
         ];

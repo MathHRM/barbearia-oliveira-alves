@@ -87,7 +87,7 @@ export default function Agenda({ date, prev, next, today, barberId, barbers, row
                     <section className="space-y-3">
                         <p className="eyebrow">{relativeDay(date, today)} em números</p>
                         <div className="grid grid-cols-2 gap-3">
-                            <StatCard label="Agendados" value={String(totals.confirmed)} />
+                            <StatCard label="Agendados" value={String(totals.scheduled)} />
                             <StatCard label="Compareceram" value={String(totals.attended)} />
                             <StatCard label="Cancelados" value={String(totals.canceled)} />
                             <StatCard label="Livres" value={String(totals.free_slots)} hint="Horários ainda vendáveis" />

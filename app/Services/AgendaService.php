@@ -107,12 +107,12 @@ class AgendaService
 
         return [
             'total' => $rows->count(),
-            'confirmed' => $by(AppointmentStatus::Confirmed->value)->count(),
+            'scheduled' => $by(AppointmentStatus::Scheduled->value)->count(),
             'attended' => $by(AppointmentStatus::Attended->value)->count(),
             'canceled' => $by(AppointmentStatus::Canceled->value)->count()
                 + $by(AppointmentStatus::NoShow->value)->count(),
             'estimated_cents' => (int) $rows->whereIn('status', [
-                AppointmentStatus::Confirmed->value,
+                AppointmentStatus::Scheduled->value,
                 AppointmentStatus::Attended->value,
                 AppointmentStatus::NoShow->value,
             ])->sum('price_cents'),
@@ -162,9 +162,9 @@ class AgendaService
             'payment_method' => $appointment->payment_method,
             // presença/falta só depois do horário começar — ninguém compareceu a algo que não aconteceu
             'can_attend' => $appointment->starts_at->isPast()
-                && in_array($appointment->status, [AppointmentStatus::Confirmed, AppointmentStatus::NoShow], true),
+                && in_array($appointment->status, [AppointmentStatus::Scheduled, AppointmentStatus::NoShow], true),
             'can_no_show' => $appointment->starts_at->isPast()
-                && $appointment->status === AppointmentStatus::Confirmed,
+                && $appointment->status === AppointmentStatus::Scheduled,
             'can_cancel' => in_array($appointment->status, AppointmentStatus::blocking(), true),
         ];
     }

@@ -1,6 +1,6 @@
 # Barbearia Oliveira Alves
 
-Agendamento online confirmado na hora + painel de gestão do barbeiro.
+Agendamento online na hora + painel de gestão do barbeiro.
 
 Laravel 12 · Inertia · React 19 · TypeScript · shadcn/ui · Tailwind 4 · PostgreSQL 16 · Render.
 

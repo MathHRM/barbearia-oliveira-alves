@@ -4,7 +4,7 @@ import type { StatusTone } from '@/types/painel';
 const TONES: Record<StatusTone, string> = {
     brand: 'border-primary/35 bg-primary/10 text-primary',
     success: 'border-success/35 bg-success/10 text-success',
-    warning: 'border-brand-soft/35 bg-brand-soft/10 text-brand-soft',
+    warning: 'border-amber-500/35 bg-amber-500/10 text-amber-600 dark:text-amber-400',
     danger: 'border-destructive/35 bg-destructive/10 text-destructive',
 };
 

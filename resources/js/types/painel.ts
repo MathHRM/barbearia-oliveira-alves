@@ -46,7 +46,7 @@ export type { Paginated } from './pagination';
 
 export interface AgendaTotals {
     total: number;
-    confirmed: number;
+    scheduled: number;
     attended: number;
     canceled: number;
     free_slots: number;

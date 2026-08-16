@@ -5,10 +5,15 @@ namespace App\Http\Controllers;
 use App\Actions\CancelAppointment;
 use App\Actions\ReserveAppointment;
 use App\Exceptions\SlotUnavailableException;
+use App\Http\Requests\LookupAppointmentsRequest;
 use App\Http\Requests\StoreAppointmentRequest;
+use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
+use App\Models\Customer;
 use App\Models\Service;
+use App\Support\Phone;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Carbon;
@@ -17,7 +22,36 @@ use Inertia\Response;
 
 class AppointmentController extends Controller
 {
-    /** Confirma imediatamente; o método de pagamento é apenas uma estimativa. */
+    public function lookupPage(): Response
+    {
+        return Inertia::render('agendar/consultar', [
+            'appointments' => [],
+            'searched_phone' => null,
+        ]);
+    }
+
+    public function lookup(LookupAppointmentsRequest $request): JsonResponse
+    {
+        $phone = Phone::e164($request->validated('phone'));
+        $customer = Customer::where('phone_e164', $phone)->first();
+
+        $appointments = $customer
+            ? Appointment::with(['barber', 'service', 'customer'])
+                ->where('customer_id', $customer->id)
+                ->where('status', AppointmentStatus::Scheduled)
+                ->orderBy('starts_at')
+                ->get()
+                ->map(fn (Appointment $appointment) => $this->present($appointment))
+                ->values()
+            : collect();
+
+        return response()->json([
+            'appointments' => $appointments,
+            'phone' => Phone::format($phone),
+        ]);
+    }
+
+    /** Cria o agendamento; o método de pagamento é apenas uma estimativa. */
     public function store(StoreAppointmentRequest $request, ReserveAppointment $reserve): JsonResponse
     {
         $data = $request->validated();
@@ -45,7 +79,7 @@ class AppointmentController extends Controller
         ], 201);
     }
 
-    /** Tela de confirmação do agendamento. */
+    /** Tela de acompanhamento do agendamento. */
     public function show(string $token): Response
     {
         $appointment = $this->find($token);
@@ -60,15 +94,23 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function cancel(string $token, CancelAppointment $cancel): RedirectResponse
+    public function cancel(Request $request, string $token, CancelAppointment $cancel): RedirectResponse|JsonResponse
     {
         $appointment = $this->find($token);
 
         if (! $appointment->isCancelableByCustomer()) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Esse agendamento não pode mais ser cancelado pelo site.'], 422);
+            }
+
             return back()->with('error', 'Esse agendamento não pode mais ser cancelado pelo site.');
         }
 
         $cancel->handle($appointment, reason: 'Cancelado pelo cliente');
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Agendamento cancelado.']);
+        }
 
         return back()->with('success', 'Agendamento cancelado.');
     }

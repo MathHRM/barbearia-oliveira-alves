@@ -128,7 +128,7 @@ class AvailabilityServiceTest extends TestCase
         $this->assertSame(['09:00'], $this->times($this->slotsFor($service, $barber->id, '2026-09-03')));
     }
 
-    public function test_trata_agendamento_confirmado_como_ocupado(): void
+    public function test_trata_agendamento_agendado_como_ocupado(): void
     {
         $this->freezeNow();
 

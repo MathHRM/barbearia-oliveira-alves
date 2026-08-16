@@ -46,7 +46,7 @@ export default function Wizard({ services, barbers }: Props) {
         setStep(3);
     };
 
-    /** Passo 04: confirma o horário; o servidor devolve a confirmação. */
+    /** Passo 04: agenda o horário; o servidor devolve o acompanhamento. */
     const submit = async () => {
         if (!service || !slot || submitting) {
             return;

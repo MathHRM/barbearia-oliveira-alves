@@ -74,7 +74,7 @@ class Appointment extends Model
     /** Cliente só cancela sozinho dentro da janela configurada. */
     public function isCancelableByCustomer(): bool
     {
-        return $this->status === AppointmentStatus::Confirmed
+        return $this->status === AppointmentStatus::Scheduled
             && $this->starts_at->gt(now()->addHours(config('barbearia.cancel_window_hours')));
     }
 

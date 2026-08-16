@@ -53,7 +53,7 @@ class ReserveAppointmentTest extends TestCase
         ];
     }
 
-    public function test_confirma_agendamento_com_metodo_analitico_e_preco_congelado(): void
+    public function test_agenda_com_metodo_analitico_e_preco_congelado(): void
     {
         $barber = $this->barber();
         $service = Service::factory()->create(['duration_min' => 60, 'price_cents' => 4500]);
@@ -63,12 +63,11 @@ class ReserveAppointmentTest extends TestCase
         $appointment = Appointment::firstOrFail();
 
         $this->assertSame($appointment->public_token, $response->json('token'));
-        $this->assertSame(AppointmentStatus::Confirmed, $appointment->status);
+        $this->assertSame(AppointmentStatus::Scheduled, $appointment->status);
         $this->assertSame(4500, $appointment->price_cents);
         $this->assertSame(60, $appointment->duration_min);
         $this->assertSame('Costeleta baixa', $appointment->customer_note);
         $this->assertSame('pix', $appointment->payment_method);
-        $this->assertNotNull($appointment->confirmed_at);
         $this->assertSame('2026-09-03 12:00', $appointment->starts_at->format('Y-m-d H:i')); // 09:00 em -03:00
     }
 

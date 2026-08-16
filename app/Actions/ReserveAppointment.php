@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Cria o agendamento confirmado; o método de pagamento é apenas analítico.
+ * Cria o agendamento; o método de pagamento é apenas analítico.
  */
 class ReserveAppointment
 {
@@ -48,13 +48,12 @@ class ReserveAppointment
                     'service_id' => $service->id,
                     'starts_at' => $startsAt,
                     'ends_at' => $startsAt->copy()->addMinutes($service->duration_min),
-                    'status' => AppointmentStatus::Confirmed,
+                    'status' => AppointmentStatus::Scheduled,
                     'origin' => AppointmentOrigin::Online,
                     'price_cents' => $service->price_cents,
                     'duration_min' => $service->duration_min,
                     'customer_note' => $customer['note'] ?? null,
                     'payment_method' => $customer['payment_method'],
-                    'confirmed_at' => now(),
                 ]);
             });
         } catch (QueryException $exception) {

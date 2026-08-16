@@ -80,7 +80,7 @@ class AgendaTest extends TestCase
                 ->where('date', '2026-09-02')
                 ->has('rows', 3)
                 ->where('rows.0.starts_at', '10:00')
-                ->where('totals.confirmed', 1)
+                ->where('totals.scheduled', 1)
                 ->where('totals.attended', 1)
                 ->where('totals.canceled', 1)
                 ->where('totals.estimated_cents', 9000)
@@ -94,8 +94,8 @@ class AgendaTest extends TestCase
         $service = Service::factory()->create(['duration_min' => 30, 'price_cents' => 4500]);
         $make = fn (string $time) => Appointment::factory()->for($barber)->for($service)->at($this->at($time));
 
-        $make('08:00')->create();                  // confirmado → estimado
-        $make('09:00')->create();                  // confirmado     → previsto
+        $make('08:00')->create();                  // agendado → estimado
+        $make('09:00')->create();                  // agendado  → previsto
         $make('10:00')->noShow()->create();        // faltou         → previsto
         $make('11:00')->attended()->create();      // compareceu     → previsto e recebido
 
@@ -157,7 +157,7 @@ class AgendaTest extends TestCase
             ->post("/painel/agendamentos/{$appointment->id}/compareceu")
             ->assertSessionHas('error', 'Esse horário ainda não chegou.');
 
-        $this->assertSame(AppointmentStatus::Confirmed, $appointment->refresh()->status);
+        $this->assertSame(AppointmentStatus::Scheduled, $appointment->refresh()->status);
     }
 
     public function test_agenda_esconde_os_botoes_de_presenca_no_futuro(): void
@@ -195,7 +195,7 @@ class AgendaTest extends TestCase
 
         $this->actingAs($user)->post("/painel/agendamentos/{$appointment->id}/compareceu")->assertForbidden();
 
-        $this->assertSame(AppointmentStatus::Confirmed, $appointment->refresh()->status);
+        $this->assertSame(AppointmentStatus::Scheduled, $appointment->refresh()->status);
     }
 
     public function test_cancelamento_nao_faz_chamada_a_provedor(): void
@@ -211,7 +211,7 @@ class AgendaTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_lancamento_de_balcao_entra_confirmado(): void
+    public function test_lancamento_de_balcao_entra_agendado(): void
     {
         $barber = $this->barber();
         $service = Service::factory()->create(['duration_min' => 30, 'price_cents' => 4500]);
@@ -228,7 +228,7 @@ class AgendaTest extends TestCase
 
         $appointment = Appointment::firstOrFail();
 
-        $this->assertSame(AppointmentStatus::Confirmed, $appointment->status);
+        $this->assertSame(AppointmentStatus::Scheduled, $appointment->status);
         $this->assertSame(AppointmentOrigin::Manual, $appointment->origin);
         $this->assertSame(4500, $appointment->price_cents);
         $this->assertSame('+5531988887777', Customer::firstOrFail()->phone_e164);

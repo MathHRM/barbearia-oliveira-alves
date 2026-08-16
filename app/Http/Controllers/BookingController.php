@@ -9,6 +9,12 @@ use Inertia\Response;
 
 class BookingController extends Controller
 {
+    /** Landing pública com os dois caminhos principais. */
+    public function home(): Response
+    {
+        return Inertia::render('home');
+    }
+
     /** Wizard público: o catálogo vem no primeiro render, a disponibilidade é buscada por XHR. */
     public function index(): Response
     {

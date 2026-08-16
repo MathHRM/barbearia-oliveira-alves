@@ -29,12 +29,19 @@ class AvailabilityEndpointTest extends TestCase
         return $barber;
     }
 
+    public function test_home_exibe_os_dois_caminhos_publicos(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('home'));
+    }
+
     public function test_wizard_recebe_catalogo_no_primeiro_render(): void
     {
         $service = Service::factory()->create();
         $barber = $this->barber();
 
-        $this->get('/')
+        $this->get('/agendar')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('agendar/wizard')

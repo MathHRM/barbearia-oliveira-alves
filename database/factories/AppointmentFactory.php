@@ -27,11 +27,10 @@ class AppointmentFactory extends Factory
             'service_id' => Service::factory(),
             'starts_at' => $starts,
             'ends_at' => $starts->copy()->addMinutes($duration),
-            'status' => AppointmentStatus::Confirmed,
+            'status' => AppointmentStatus::Scheduled,
             'origin' => AppointmentOrigin::Online,
             'price_cents' => 4500,
             'duration_min' => $duration,
-            'confirmed_at' => now(),
             'payment_method' => 'cash',
         ];
     }

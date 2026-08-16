@@ -7,7 +7,7 @@ import { CalendarPlus, CheckCircle2, MapPin, XCircle } from 'lucide-react';
 export interface TrackedAppointment {
     token: string;
     code: string;
-    status: 'confirmed' | 'attended' | 'no_show' | 'canceled' | 'expired';
+    status: 'scheduled' | 'attended' | 'no_show' | 'canceled' | 'expired';
     status_label: string;
     starts_at: string;
     date: string;
@@ -36,12 +36,12 @@ export default function Acompanhamento({ appointment, shop }: Props) {
             </header>
 
             <main className="mx-auto w-full max-w-xl space-y-6 px-4 py-8">
-                {appointment.status === 'confirmed' || appointment.status === 'attended' ? (
+                {appointment.status === 'scheduled' || appointment.status === 'attended' ? (
                     <>
                         <div className="flex flex-col items-center gap-3 text-center">
                             <CheckCircle2 className="text-success size-10" />
                             <p className="eyebrow">Passo 06 · Pronto</p>
-                            <h1 className="text-[1.75rem] leading-tight">Horário confirmado</h1>
+                            <h1 className="text-[1.75rem] leading-tight">Horário agendado</h1>
                             <p className="tabular text-muted-foreground text-sm">{appointment.code}</p>
                         </div>
 
@@ -55,20 +55,26 @@ export default function Acompanhamento({ appointment, shop }: Props) {
                             </div>
                         </div>
 
-                        <a href={`/agendamentos/${appointment.token}/agenda.ics`}>
-                            <Button variant="outline" className="w-full" size="lg">
+                        <Button asChild variant="outline" className="w-full" size="lg">
+                            <a href={`/agendamentos/${appointment.token}/agenda.ics`}>
                                 <CalendarPlus className="size-4" /> Adicionar ao calendário
-                            </Button>
-                        </a>
+                            </a>
+                        </Button>
 
                         {appointment.cancelable && (
-                            <button
+                            <Button
                                 type="button"
-                                onClick={() => router.post(`/agendamentos/${appointment.token}/cancelar`)}
-                                className="text-muted-foreground hover:text-destructive w-full text-center text-xs underline underline-offset-4"
+                                variant="ghost"
+                                size="lg"
+                                onClick={() => {
+                                    if (window.confirm('Cancelar este agendamento?')) {
+                                        router.post(`/agendamentos/${appointment.token}/cancelar`);
+                                    }
+                                }}
+                                className="text-destructive hover:text-destructive w-full hover:bg-transparent"
                             >
-                                Cancelar agendamento
-                            </button>
+                                Cancelar
+                            </Button>
                         )}
                     </>
                 ) : (
@@ -76,12 +82,10 @@ export default function Acompanhamento({ appointment, shop }: Props) {
                         <div className="flex flex-col items-center gap-3 text-center">
                             <XCircle className="text-destructive size-10" />
                             <h1 className="text-[1.75rem] leading-tight">{appointment.status_label}</h1>
-                            <p className="text-muted-foreground text-sm">
-                                'Esse agendamento não está mais valendo.'
-                            </p>
+                            <p className="text-muted-foreground text-sm">'Esse agendamento não está mais valendo.'</p>
                         </div>
 
-                        <Button className="w-full" size="lg" onClick={() => router.visit('/')}>
+                        <Button className="w-full" size="lg" onClick={() => router.visit('/agendar')}>
                             Agendar de novo
                         </Button>
                     </>

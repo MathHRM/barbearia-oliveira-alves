@@ -51,7 +51,7 @@ class PaymentFlowTest extends TestCase
         }
 
         $this->assertSame(['pix', 'card', 'cash'], Appointment::query()->orderBy('id')->pluck('payment_method')->all());
-        $this->assertSame(3, Appointment::where('status', AppointmentStatus::Confirmed)->count());
+        $this->assertSame(3, Appointment::where('status', AppointmentStatus::Scheduled)->count());
         Carbon::setTestNow();
     }
 

@@ -14,7 +14,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Agendamento de balcão: entra já confirmado, sem gateway.
+ * Agendamento de balcão: entra agendado, sem gateway.
  * O pagamento acontece no caixa — quem garante que não pisa em outro horário
  * continua sendo a constraint EXCLUDE.
  */
@@ -34,13 +34,12 @@ class CreateManualAppointment
                     'service_id' => $service->id,
                     'starts_at' => $startsAt,
                     'ends_at' => $startsAt->copy()->addMinutes($service->duration_min),
-                    'status' => AppointmentStatus::Confirmed,
+                    'status' => AppointmentStatus::Scheduled,
                     'origin' => AppointmentOrigin::Manual,
                     'price_cents' => $service->price_cents,
                     'duration_min' => $service->duration_min,
                     'customer_note' => $customer['note'] ?? null,
                     'payment_method' => $customer['payment_method'],
-                    'confirmed_at' => now(),
                 ]);
             });
         } catch (QueryException $exception) {
