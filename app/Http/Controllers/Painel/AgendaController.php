@@ -27,6 +27,7 @@ class AgendaController extends Controller
 
         if (! $scope->canSeeRevenue()) {
             unset($totals['estimated_cents']);
+            unset($totals['earned_cents']);
         }
 
         $day = Carbon::parse($date, config('barbearia.timezone'));

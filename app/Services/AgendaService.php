@@ -116,6 +116,7 @@ class AgendaService
                 AppointmentStatus::Attended->value,
                 AppointmentStatus::NoShow->value,
             ])->sum('price_cents'),
+            'earned_cents' => (int) $by(AppointmentStatus::Attended->value)->sum('price_cents'),
             'free_slots' => $this->freeSlots($date, $barberId),
         ];
     }
@@ -165,7 +166,7 @@ class AgendaService
                 && in_array($appointment->status, [AppointmentStatus::Scheduled, AppointmentStatus::NoShow], true),
             'can_no_show' => $appointment->starts_at->isPast()
                 && $appointment->status === AppointmentStatus::Scheduled,
-            'can_cancel' => in_array($appointment->status, AppointmentStatus::blocking(), true),
+            'can_cancel' => $appointment->status === AppointmentStatus::Scheduled,
         ];
     }
 

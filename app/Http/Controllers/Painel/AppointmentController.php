@@ -69,6 +69,10 @@ class AppointmentController extends Controller
     {
         $this->authorizeManage($request, $appointment);
 
+        if ($appointment->status === AppointmentStatus::Attended) {
+            return back()->with('error', 'Um agendamento marcado como compareceu não pode ser cancelado.');
+        }
+
         $validated = $request->validate([
             'reason' => ['nullable', 'string', 'max:200'],
         ]);

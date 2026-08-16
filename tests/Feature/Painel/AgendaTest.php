@@ -84,6 +84,7 @@ class AgendaTest extends TestCase
                 ->where('totals.attended', 1)
                 ->where('totals.canceled', 1)
                 ->where('totals.estimated_cents', 9000)
+                ->where('totals.earned_cents', 4500)
                 ->where('can.see_revenue', true));
     }
 
@@ -102,7 +103,8 @@ class AgendaTest extends TestCase
         $this->actingAs($this->owner())
             ->get('/painel/agenda?date=2026-09-02')
             ->assertInertia(fn ($page) => $page
-                ->where('totals.estimated_cents', 18000));
+                ->where('totals.estimated_cents', 18000)
+                ->where('totals.earned_cents', 4500));
     }
 
     public function test_barbeiro_ve_so_a_propria_agenda_e_sem_faturamento(): void
@@ -122,7 +124,8 @@ class AgendaTest extends TestCase
                 ->has('rows', 1)
                 ->where('rows.0.barber_id', $mine->id)
                 ->where('can.see_revenue', false)
-                ->missing('totals.estimated_cents'));
+                ->missing('totals.estimated_cents')
+                ->missing('totals.earned_cents'));
     }
 
     public function test_marca_comparecimento_e_atualiza_a_ultima_visita(): void
@@ -209,6 +212,18 @@ class AgendaTest extends TestCase
 
         $this->assertSame(AppointmentStatus::Canceled, $appointment->refresh()->status);
         Http::assertNothingSent();
+    }
+
+    public function test_agendamento_compareceu_nao_pode_ser_cancelado(): void
+    {
+        $appointment = Appointment::factory()->for($this->barber())->attended()->create();
+
+        $this->actingAs($this->owner())
+            ->post("/painel/agendamentos/{$appointment->id}/cancelar", ['reason' => 'Cliente avisou'])
+            ->assertRedirect()
+            ->assertSessionHas('error', 'Um agendamento marcado como compareceu não pode ser cancelado.');
+
+        $this->assertSame(AppointmentStatus::Attended, $appointment->refresh()->status);
     }
 
     public function test_lancamento_de_balcao_entra_agendado(): void

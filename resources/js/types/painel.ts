@@ -51,6 +51,7 @@ export interface AgendaTotals {
     canceled: number;
     free_slots: number;
     estimated_cents?: number;
+    earned_cents?: number;
 }
 
 export interface PainelBarber {

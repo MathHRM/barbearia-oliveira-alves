@@ -85,7 +85,12 @@ export default function Agenda({ date, prev, next, today, barberId, barbers, row
                             <StatCard label="Compareceram" value={String(totals.attended)} />
                             <StatCard label="Cancelados" value={String(totals.canceled)} />
                             <StatCard label="Livres" value={String(totals.free_slots)} hint="Horários ainda vendáveis" />
-                            {can.see_revenue && <StatCard label="Valor estimado" value={brl(totals.estimated_cents ?? 0)} className="col-span-2" />}
+                            {can.see_revenue && (
+                                <>
+                                    <StatCard label="Valor estimado" value={brl(totals.estimated_cents ?? 0)} />
+                                    <StatCard label="Valor ganho" value={brl(totals.earned_cents ?? 0)} />
+                                </>
+                            )}
                         </div>
                     </section>
 
@@ -142,9 +147,9 @@ function Row({ row, showBarber, onCancel }: { row: AgendaRow; showBarber: boolea
             <p className="tabular text-primary text-right font-semibold sm:w-20">{brl(row.price_cents)}</p>
 
             <div className="flex flex-wrap gap-2 sm:ml-auto">
-                {row.can_attend && (
-                    <Button className="min-h-11 flex-1 sm:min-h-9 sm:flex-none" size="sm" variant="outline" onClick={() => act('compareceu')}>
-                        <Check className="size-4" /> Compareceu
+                {row.can_cancel && (
+                    <Button size="sm" variant="ghost" className="text-destructive min-h-11 flex-1 sm:min-h-9 sm:flex-none" onClick={onCancel}>
+                        Cancelar
                     </Button>
                 )}
                 {row.can_no_show && (
@@ -152,9 +157,9 @@ function Row({ row, showBarber, onCancel }: { row: AgendaRow; showBarber: boolea
                         <X className="size-4" /> Faltou
                     </Button>
                 )}
-                {row.can_cancel && (
-                    <Button size="sm" variant="ghost" className="text-destructive min-h-11 flex-1 sm:min-h-9 sm:flex-none" onClick={onCancel}>
-                        Cancelar
+                {row.can_attend && (
+                    <Button className="min-h-11 flex-1 sm:min-h-9 sm:flex-none" size="sm" variant="outline" onClick={() => act('compareceu')}>
+                        <Check className="size-4" /> Compareceu
                     </Button>
                 )}
             </div>
