@@ -38,20 +38,24 @@ export default function Agenda({ date, prev, next, today, barberId, barbers, row
         <PainelLayout
             title="Agenda"
             subtitle={longDate(date)}
-            actions={<ManualAppointmentDialog date={date} services={services} barbers={barbers} canPickBarber={can.filter_barbers} />}
+            actions={
+                <div className="flex justify-end">
+                    <ManualAppointmentDialog date={date} services={services} barbers={barbers} canPickBarber={can.filter_barbers} />
+                </div>
+            }
         >
             <Head title="Agenda" />
 
-            <div className="mb-6 flex flex-wrap items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => go({ date: prev })}>
-                    <ChevronLeft className="size-4" /> Ontem
+            <div className="mb-5 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:flex-wrap">
+                <Button className="min-h-11 px-2 sm:min-h-9 sm:px-3" variant="outline" size="sm" onClick={() => go({ date: prev })}>
+                    <ChevronLeft className="size-4" /> <span className="hidden sm:inline">Anterior</span>
                 </Button>
-                <DateInput value={date} onChange={(value) => go({ date: value })} className="w-[11.5rem]" aria-label="Dia da agenda" />
-                <Button variant="outline" size="sm" onClick={() => go({ date: next })}>
-                    Amanhã <ChevronRight className="size-4" />
+                <DateInput value={date} onChange={(value) => go({ date: value })} className="w-full sm:w-[11.5rem]" aria-label="Dia da agenda" />
+                <Button className="min-h-11 px-2 sm:min-h-9 sm:px-3" variant="outline" size="sm" onClick={() => go({ date: next })}>
+                    <span className="hidden sm:inline">Próximo</span> <ChevronRight className="size-4" />
                 </Button>
                 {date !== today && (
-                    <Button variant="ghost" size="sm" onClick={() => go({ date: today })}>
+                    <Button className="col-span-3 min-h-10 sm:min-h-9" variant="ghost" size="sm" onClick={() => go({ date: today })}>
                         Hoje
                     </Button>
                 )}
@@ -60,7 +64,7 @@ export default function Agenda({ date, prev, next, today, barberId, barbers, row
                     <select
                         value={barberId ?? ''}
                         onChange={(event) => go({ barber_id: event.target.value === '' ? null : Number(event.target.value) })}
-                        className="border-input bg-background ml-auto h-9 rounded-md border px-3 text-sm"
+                        className="border-input bg-background col-span-3 h-11 w-full rounded-md border px-3 text-sm sm:ml-auto sm:h-9 sm:w-auto"
                     >
                         <option value="">Todos os profissionais</option>
                         {barbers.map((barber) => (
@@ -72,36 +76,32 @@ export default function Agenda({ date, prev, next, today, barberId, barbers, row
                 )}
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
-                <div className="space-y-3">
-                    {rows.length === 0 ? (
-                        <div className="border-border text-muted-foreground rounded-[1.125rem] border border-dashed p-10 text-center text-sm">
-                            Nenhum agendamento nesse dia.
-                        </div>
-                    ) : (
-                        rows.map((row) => <Row key={row.id} row={row} showBarber={barberId === null} onCancel={() => setCanceling(row)} />)
-                    )}
-                </div>
-
-                <aside className="space-y-6">
+            <div className="grid gap-5 lg:grid-cols-[1fr_20rem] lg:gap-6">
+                <aside className="order-first space-y-5 lg:order-last lg:space-y-6">
                     <section className="space-y-3">
                         <p className="eyebrow">{relativeDay(date, today)} em números</p>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                             <StatCard label="Agendados" value={String(totals.scheduled)} />
                             <StatCard label="Compareceram" value={String(totals.attended)} />
                             <StatCard label="Cancelados" value={String(totals.canceled)} />
                             <StatCard label="Livres" value={String(totals.free_slots)} hint="Horários ainda vendáveis" />
-                            {can.see_revenue && (
-                                <>
-                                    <StatCard label="Valor estimado" value={brl(totals.estimated_cents ?? 0)} />
-                                </>
-                            )}
+                            {can.see_revenue && <StatCard label="Valor estimado" value={brl(totals.estimated_cents ?? 0)} className="col-span-2" />}
                         </div>
                     </section>
 
                     {/* key no dia: trocar de data reseta o formulário para o dia visível */}
                     <BlockPanel key={date} date={date} barbers={barbers} barberId={barberId} blocks={blocks} canPickBarber={can.filter_barbers} />
                 </aside>
+
+                <div className="order-last space-y-3 lg:order-first">
+                    {rows.length === 0 ? (
+                        <div className="border-border text-muted-foreground rounded-[1.125rem] border border-dashed p-8 text-center text-sm sm:p-10">
+                            Nenhum agendamento nesse dia.
+                        </div>
+                    ) : (
+                        rows.map((row) => <Row key={row.id} row={row} showBarber={barberId === null} onCancel={() => setCanceling(row)} />)
+                    )}
+                </div>
             </div>
 
             <CancelDialog row={canceling} onClose={() => setCanceling(null)} />
@@ -113,13 +113,16 @@ function Row({ row, showBarber, onCancel }: { row: AgendaRow; showBarber: boolea
     const act = (action: string) => router.post(`/painel/agendamentos/${row.id}/${action}`, {}, { preserveScroll: true });
 
     return (
-        <article className="border-border bg-card flex flex-wrap items-center gap-4 rounded-[1.125rem] border p-4">
-            <div className="w-14 shrink-0">
-                <p className="tabular text-lg font-semibold">{row.starts_at}</p>
-                <p className="tabular text-muted-foreground text-xs">{row.ends_at}</p>
+        <article className="border-border bg-card flex flex-col gap-3 rounded-[1.125rem] border p-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+            <div className="flex items-start gap-3 sm:block sm:w-14 sm:shrink-0">
+                <div>
+                    <p className="tabular text-lg font-semibold">{row.starts_at}</p>
+                    <p className="tabular text-muted-foreground text-xs">{row.ends_at}</p>
+                </div>
+                <p className="text-muted-foreground ml-auto text-xs sm:hidden">{row.origin}</p>
             </div>
 
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 sm:min-w-[12rem]">
                 <div className="flex flex-wrap items-center gap-2">
                     <p className="font-display truncate text-base font-semibold">{row.customer.name}</p>
                     <StatusBadge tone={row.tone}>{row.status_label}</StatusBadge>
@@ -136,21 +139,21 @@ function Row({ row, showBarber, onCancel }: { row: AgendaRow; showBarber: boolea
                 </p>
             </div>
 
-            <p className="tabular text-primary w-20 text-right font-semibold">{brl(row.price_cents)}</p>
+            <p className="tabular text-primary text-right font-semibold sm:w-20">{brl(row.price_cents)}</p>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 sm:ml-auto">
                 {row.can_attend && (
-                    <Button size="sm" variant="outline" onClick={() => act('compareceu')}>
+                    <Button className="min-h-11 flex-1 sm:min-h-9 sm:flex-none" size="sm" variant="outline" onClick={() => act('compareceu')}>
                         <Check className="size-4" /> Compareceu
                     </Button>
                 )}
                 {row.can_no_show && (
-                    <Button size="sm" variant="ghost" onClick={() => act('faltou')}>
+                    <Button className="min-h-11 flex-1 sm:min-h-9 sm:flex-none" size="sm" variant="ghost" onClick={() => act('faltou')}>
                         <X className="size-4" /> Faltou
                     </Button>
                 )}
                 {row.can_cancel && (
-                    <Button size="sm" variant="ghost" className="text-destructive" onClick={onCancel}>
+                    <Button size="sm" variant="ghost" className="text-destructive min-h-11 flex-1 sm:min-h-9 sm:flex-none" onClick={onCancel}>
                         Cancelar
                     </Button>
                 )}
