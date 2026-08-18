@@ -9,8 +9,9 @@ Barbearia Oliveira Alves na Azure.
 
 O PostgreSQL e a VM já foram criados no portal. O acesso SSH foi validado, o
 Docker foi instalado e a aplicação está respondendo pelo domínio
-`barbearia-oliveira-alves.matheushrm.dev` com HTTPS. Ainda falta a validação
-funcional completa do sistema.
+`barbearia-oliveira-alves.matheushrm.dev` com HTTPS. O administrador, os
+barbeiros, os serviços e os horários iniciais já foram cadastrados. Ainda falta
+a validação funcional completa do sistema.
 
 ⚠️ **Operação manual:** o estado abaixo foi confirmado pelas telas do portal e
 pelo teste informado pelo usuário. O repositório não consulta a assinatura
@@ -278,6 +279,55 @@ computador do usuário e não deve ser adicionada ao repositório.
   Network Security Group se o portal inicialmente criou SSH aberto para a
   Internet.
 
+### Acessar a VM por SSH
+
+O acesso administrativo é feito por SSH usando o usuário
+`barbeariaadmin`, o IP público atual da VM e a chave privada baixada durante a
+criação. A chave não é uma senha e não deve ser enviada para o Git, para a VM
+ou compartilhada com terceiros.
+
+Na máquina local, ajuste as permissões da chave e conecte-se:
+
+```bash
+chmod 600 /caminho/seguro/barbearia_key.pem
+ssh -i /caminho/seguro/barbearia_key.pem \
+  barbeariaadmin@102.133.162.154
+```
+
+Substitua `/caminho/seguro/barbearia_key.pem` pelo local real em que a chave
+foi salva. O IP deve ser conferido no portal antes do comando, especialmente
+depois de desalocar e religar a VM.
+
+Na primeira conexão, o SSH pode perguntar se a impressão digital do servidor
+deve ser aceita. Confirme somente se o endereço/IP corresponde à VM criada.
+Depois de conectado, o prompt deverá indicar o usuário e o nome da VM. Para
+acessar o projeto:
+
+```bash
+cd ~/barbearia
+docker compose -f docker-compose.prod.yml ps
+```
+
+Para sair da VM:
+
+```bash
+exit
+```
+
+Se a conexão for recusada, conferir nesta ordem:
+
+1. a VM está `Em execução`, e não `Parado (desalocado)`;
+2. o IP público atual está correto;
+3. a regra de entrada TCP `22` do Network Security Group permite o IP do
+   computador administrador;
+4. o arquivo da chave corresponde ao par de chaves criado para a VM;
+5. a chave possui permissão restrita (`chmod 600`).
+
+Como alternativa, o portal Azure oferece a opção **Conectar > SSH**, que
+exibe o comando equivalente e ajuda a confirmar o IP, usuário e porta. O
+Azure Cloud Shell também pode ser usado, desde que a chave privada esteja
+disponível nesse ambiente.
+
 ### Docker instalado
 
 Após a criação da VM, o Docker Engine e o plugin Docker Compose foram
@@ -315,6 +365,70 @@ respondendo por HTTP e HTTPS.
 Node durante o build. Como a VM tem apenas 1 GiB de memória, o build pode
 precisar de swap temporário ou ser feito fora da VM caso ocorra falta de
 memória.
+
+## Procedimento de deploy
+
+O deploy atual é manual e executado por SSH na VM. O código local é sincronizado
+com `rsync`; o arquivo `.env.production` não deve ser copiado, pois existe
+somente na VM.
+
+### 1. Sincronizar o código
+
+Na máquina de desenvolvimento, a partir da raiz do projeto:
+
+```bash
+rsync -az --delete \
+  --exclude='.env' \
+  --exclude='.env.production' \
+  --exclude='node_modules' \
+  --exclude='vendor' \
+  ./ barbeariaadmin@102.133.162.154:/home/barbeariaadmin/barbearia/
+```
+
+O `--delete` mantém a cópia da VM equivalente ao diretório local. Usá-lo
+somente apontando para o diretório correto da aplicação.
+
+### 2. Reconstruir e recriar a aplicação
+
+Na VM:
+
+```bash
+cd ~/barbearia
+docker compose -f docker-compose.prod.yml build --no-cache app
+docker compose -f docker-compose.prod.yml up -d --force-recreate app
+```
+
+O build compila os assets frontend e pode consumir bastante memória na VM de
+1 GiB. O entrypoint executa as migrations e recria os caches de configuração,
+eventos, rotas e views.
+
+### 3. Validar o deploy
+
+Ainda na VM:
+
+```bash
+docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml logs --tail=100 app
+curl -I https://barbearia-oliveira-alves.matheushrm.dev
+```
+
+O resultado esperado é o container em execução, logs sem erro fatal e uma
+resposta HTTP `200`, `302` ou outra resposta própria da rota testada. Também
+validar manualmente a página pública, o login em `/painel/login`, o cadastro de
+agendamento e o painel.
+
+### 4. Quando houver alteração somente de configuração
+
+Depois de alterar o `.env.production` na VM, recriar o container para que as
+variáveis sejam carregadas e os caches sejam refeitos:
+
+```bash
+cd ~/barbearia
+docker compose -f docker-compose.prod.yml up -d --force-recreate app
+```
+
+Não versionar o `.env.production` nem colocar senhas em comandos registrados no
+histórico do shell.
 
 ### Incidentes resolvidos no primeiro deploy
 
@@ -443,6 +557,63 @@ Stopped (Deallocated)
 
 Parar o sistema operacional não é suficiente; é necessário desalocar a VM pelo
 portal ou por `az vm deallocate`.
+
+### Desligar pelo portal
+
+1. Abra a VM `barbearia` no grupo de recursos `barbearia`.
+2. Confirme que não há deploy ou acesso SSH em andamento.
+3. Clique em **Parar** e confirme a opção de **desalocar** a VM.
+4. Aguarde o estado `Parado (desalocado)`.
+
+### Desligar pela Azure CLI
+
+```bash
+az vm deallocate \
+  --resource-group barbearia \
+  --name barbearia
+```
+
+Validar o estado:
+
+```bash
+az vm get-instance-view \
+  --resource-group barbearia \
+  --name barbearia \
+  --query "instanceView.statuses[?starts_with(code, 'PowerState/')].displayStatus" \
+  --output tsv
+```
+
+### Religar antes de acessar o sistema
+
+Se o PostgreSQL também estiver parado, iniciar o servidor PostgreSQL Flexible
+no portal e aguardar o estado `Ready` antes da VM. Depois, iniciar a VM:
+
+```bash
+az vm start \
+  --resource-group barbearia \
+  --name barbearia
+```
+
+Aguardar o SSH e conferir os containers:
+
+```bash
+ssh barbeariaadmin@102.133.162.154
+cd ~/barbearia
+docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml logs --tail=100 app
+```
+
+O Compose usa `restart: unless-stopped`, então o container deve voltar após a
+VM iniciar. Se ele não estiver em execução, iniciar manualmente:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d app
+```
+
+⚠️ **IP público:** confirmar no portal se o IP público está configurado como
+**Estático**. Se for dinâmico, ele pode mudar depois de uma desalocação e o
+registro A de `barbearia-oliveira-alves.matheushrm.dev` precisará ser atualizado
+antes de acessar o domínio.
 
 O PostgreSQL Flexible Server também deverá ser parado quando a aplicação não
 estiver sendo usada. O banco não ficará disponível enquanto estiver parado.
