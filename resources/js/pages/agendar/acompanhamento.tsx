@@ -61,6 +61,10 @@ export default function Acompanhamento({ appointment, shop }: Props) {
                             </a>
                         </Button>
 
+                        <Button type="button" variant="ghost" className="w-full" size="lg" onClick={() => router.visit('/')}>
+                            Fechar
+                        </Button>
+
                         {appointment.cancelable && (
                             <Button
                                 type="button"

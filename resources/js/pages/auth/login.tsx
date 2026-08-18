@@ -1,6 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
-import { FormEventHandler } from 'react';
+import { Eye, EyeOff, LoaderCircle } from 'lucide-react';
+import { FormEventHandler, useState } from 'react';
 
 import { BrandMark } from '@/components/booking/brand-mark';
 import InputError from '@/components/input-error';
@@ -17,6 +17,7 @@ interface LoginProps {
 
 /** Entrada do painel. Sem cadastro público: quem cria usuário é o dono. */
 export default function Login({ status, canResetPassword }: LoginProps) {
+    const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm<{ email: string; password: string; remember: boolean }>({
         email: '',
         password: '',
@@ -65,15 +66,26 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                 </TextLink>
                             )}
                         </div>
-                        <Input
-                            id="password"
-                            type="password"
-                            required
-                            autoComplete="current-password"
-                            value={data.password}
-                            onChange={(event) => setData('password', event.target.value)}
-                            placeholder="••••••••"
-                        />
+                        <div className="relative">
+                            <Input
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                required
+                                autoComplete="current-password"
+                                value={data.password}
+                                onChange={(event) => setData('password', event.target.value)}
+                                placeholder="••••••••"
+                                className="pr-11"
+                            />
+                            <button
+                                type="button"
+                                aria-label={showPassword ? 'Ocultar senha' : 'Visualizar senha'}
+                                onClick={() => setShowPassword((visible) => !visible)}
+                                className="text-muted-foreground hover:text-foreground absolute inset-y-0 right-0 flex w-11 items-center justify-center transition-colors"
+                            >
+                                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                            </button>
+                        </div>
                         <InputError message={errors.password} />
                     </div>
 

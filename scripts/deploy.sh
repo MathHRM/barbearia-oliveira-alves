@@ -11,6 +11,13 @@ readonly PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 : "${COMPOSE_FILE:=docker-compose.prod.yml}"
 
 readonly DEPLOY_TARGET="${DEPLOY_USER}@${DEPLOY_HOST}"
+readonly SSH_OPTIONS=(
+    -o BatchMode=yes
+    -o ConnectTimeout=10
+    -o ConnectionAttempts=1
+    -o ServerAliveInterval=10
+    -o ServerAliveCountMax=3
+)
 
 log() {
     printf '\n==> %s\n' "$*"
@@ -45,7 +52,7 @@ command -v ssh >/dev/null || die "ssh não encontrado."
 [[ -f "${PROJECT_ROOT}/${COMPOSE_FILE}" ]] || die "arquivo ${COMPOSE_FILE} não encontrado."
 
 log "Validando acesso SSH"
-ssh -o BatchMode=yes "${DEPLOY_TARGET}" true
+ssh "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" true
 
 log "Sincronizando código com ${DEPLOY_TARGET}:${DEPLOY_PATH}"
 rsync -az --delete \
@@ -56,13 +63,14 @@ rsync -az --delete \
     --exclude='public/build' \
     --exclude='storage' \
     --exclude='.git' \
+    -e "ssh -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=1" \
     "${PROJECT_ROOT}/" "${DEPLOY_TARGET}:${DEPLOY_PATH}/"
 
 log "Reconstruindo e recriando a aplicação"
-ssh "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && docker compose -f '${COMPOSE_FILE}' build --no-cache app && docker compose -f '${COMPOSE_FILE}' up -d --force-recreate app"
+ssh "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && docker compose -f '${COMPOSE_FILE}' build --no-cache app && docker compose -f '${COMPOSE_FILE}' up -d --force-recreate app"
 
 log "Validando container e endpoint"
-ssh "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && docker compose -f '${COMPOSE_FILE}' ps"
+ssh "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && docker compose -f '${COMPOSE_FILE}' ps"
 curl --fail --silent --show-error --location --head --max-time 30 "${DEPLOY_URL}" >/dev/null
 
 log "Deploy concluído: ${DEPLOY_URL}"

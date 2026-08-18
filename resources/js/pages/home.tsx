@@ -1,7 +1,7 @@
 import { BrandMark } from '@/components/booking/brand-mark';
 import { Button } from '@/components/ui/button';
 import { Head, Link } from '@inertiajs/react';
-import { CalendarDays, Search } from 'lucide-react';
+import { CalendarDays, Instagram, Search } from 'lucide-react';
 
 export default function Home() {
     return (
@@ -44,7 +44,18 @@ export default function Home() {
                     </div>
                 </section>
 
-                <p className="text-muted-foreground text-xs">Atendimento com hora marcada · São Joaquim de Bicas/MG</p>
+                <footer className="text-muted-foreground flex items-center justify-between gap-4 text-xs">
+                    <span>Atendimento com hora marcada · São Joaquim de Bicas/MG</span>
+                    <a
+                        href="https://instagram.com/g.g_barbearia34"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hover:text-primary inline-flex shrink-0 items-center gap-1.5 transition-colors"
+                    >
+                        <Instagram className="size-3.5" />
+                        <span>@g.g_barbearia34</span>
+                    </a>
+                </footer>
             </main>
         </div>
     );

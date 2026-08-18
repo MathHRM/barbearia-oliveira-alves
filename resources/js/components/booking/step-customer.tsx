@@ -64,7 +64,6 @@ export function StepCustomer({ form, errors, service, slot, date, onChange }: Pr
                         <QrCode className="text-primary size-5" />
                         <div>
                             <p className="font-display text-base font-semibold">Pix</p>
-                            <p className="text-muted-foreground text-sm">Estimativa para o atendimento</p>
                         </div>
                     </div>
                 </OptionCard>
@@ -74,7 +73,6 @@ export function StepCustomer({ form, errors, service, slot, date, onChange }: Pr
                         <CreditCard className="text-primary size-5" />
                         <div>
                             <p className="font-display text-base font-semibold">Cartão de crédito</p>
-                            <p className="text-muted-foreground text-sm">Estimativa para o atendimento</p>
                         </div>
                     </div>
                 </OptionCard>
@@ -83,7 +81,6 @@ export function StepCustomer({ form, errors, service, slot, date, onChange }: Pr
                         <Banknote className="text-primary size-5" />
                         <div>
                             <p className="font-display text-base font-semibold">Dinheiro</p>
-                            <p className="text-muted-foreground text-sm">Estimativa para o atendimento</p>
                         </div>
                     </div>
                 </OptionCard>
