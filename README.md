@@ -134,6 +134,12 @@ ambiente, por exemplo:
 DEPLOY_HOST=vm.example.com DEPLOY_USER=deploy ./scripts/deploy.sh
 ```
 
+Para usar uma chave privada específica:
+
+```bash
+./scripts/deploy.sh --ssh-key /caminho/seguro/barbearia_key.pem
+```
+
 ---
 
 ## Estrutura

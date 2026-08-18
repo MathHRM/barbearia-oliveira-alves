@@ -11,7 +11,9 @@ readonly PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 : "${COMPOSE_FILE:=docker-compose.prod.yml}"
 
 readonly DEPLOY_TARGET="${DEPLOY_USER}@${DEPLOY_HOST}"
-readonly SSH_OPTIONS=(
+SSH_KEY=""
+
+SSH_OPTIONS=(
     -o BatchMode=yes
     -o ConnectTimeout=10
     -o ConnectionAttempts=1
@@ -38,13 +40,43 @@ Variáveis opcionais:
   DEPLOY_PATH    diretório da aplicação na VM
   DEPLOY_URL     URL usada no health check
   COMPOSE_FILE   arquivo Compose de produção
+  --ssh-key      caminho da chave privada SSH
 EOF
 }
 
-if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
-    usage
-    exit 0
+while (($# > 0)); do
+    case "$1" in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        --ssh-key)
+            (($# >= 2)) || die "--ssh-key exige o caminho da chave privada."
+            SSH_KEY="$2"
+            shift 2
+            ;;
+        --ssh-key=*)
+            SSH_KEY="${1#*=}"
+            [[ -n "${SSH_KEY}" ]] || die "--ssh-key exige o caminho da chave privada."
+            shift
+            ;;
+        *)
+            die "argumento desconhecido: $1"
+            ;;
+    esac
+done
+
+if [[ -n "${SSH_KEY}" ]]; then
+    [[ -f "${SSH_KEY}" ]] || die "chave SSH não encontrada: ${SSH_KEY}"
+    [[ -r "${SSH_KEY}" ]] || die "chave SSH sem permissão de leitura: ${SSH_KEY}"
+    SSH_OPTIONS+=(
+        -i "${SSH_KEY}"
+        -o IdentitiesOnly=yes
+    )
 fi
+
+readonly SSH_OPTIONS
+printf -v RSYNC_SSH_COMMAND '%q ' ssh "${SSH_OPTIONS[@]}"
 
 command -v rsync >/dev/null || die "rsync não encontrado."
 command -v ssh >/dev/null || die "ssh não encontrado."
@@ -63,7 +95,7 @@ rsync -az --delete \
     --exclude='public/build' \
     --exclude='storage' \
     --exclude='.git' \
-    -e "ssh -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=1" \
+    -e "${RSYNC_SSH_COMMAND}" \
     "${PROJECT_ROOT}/" "${DEPLOY_TARGET}:${DEPLOY_PATH}/"
 
 log "Reconstruindo e recriando a aplicação"
