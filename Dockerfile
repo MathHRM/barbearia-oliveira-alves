@@ -44,7 +44,8 @@ FROM base AS prod
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
-    OCTANE_SERVER=frankenphp
+    OCTANE_SERVER=frankenphp \
+    SERVER_NAME=barbearia-oliveira-alves.matheushrm.dev
 
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction
@@ -59,6 +60,6 @@ RUN composer dump-autoload --optimize --classmap-authoritative \
 COPY docker/entrypoint.prod.sh /usr/local/bin/entrypoint
 RUN chmod +x /usr/local/bin/entrypoint
 
-EXPOSE 8000
+EXPOSE 80 443 443/udp
 ENTRYPOINT ["entrypoint"]
-CMD ["frankenphp", "php-server", "--root", "/app/public", "-l", ":8000"]
+CMD ["frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile", "--adapter", "caddyfile"]

@@ -114,6 +114,12 @@ O entrypoint de produção roda `migrate --force` e recria os caches a cada depl
 Aponte `DB_*` para a Internal Database URL do Render e defina `APP_KEY` uma vez
 (`php artisan key:generate --show`).
 
+## Deploy na Azure
+
+O planejamento da infraestrutura Azure está documentado em
+[`docs/azure.md`](docs/azure.md). O deploy Azure ainda está em preparação e não
+substitui automaticamente o fluxo documentado do Render.
+
 ---
 
 ## Estrutura
