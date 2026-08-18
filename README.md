@@ -120,6 +120,20 @@ O planejamento da infraestrutura Azure está documentado em
 [`docs/azure.md`](docs/azure.md). O deploy Azure ainda está em preparação e não
 substitui automaticamente o fluxo documentado do Render.
 
+Para executar o fluxo documentado de sincronização, build, recriação e health
+check a partir da raiz do projeto:
+
+```bash
+./scripts/deploy.sh
+```
+
+O usuário, host, diretório remoto e URL podem ser sobrescritos por variáveis de
+ambiente, por exemplo:
+
+```bash
+DEPLOY_HOST=vm.example.com DEPLOY_USER=deploy ./scripts/deploy.sh
+```
+
 ---
 
 ## Estrutura
