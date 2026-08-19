@@ -98,11 +98,14 @@ rsync -az --delete \
     -e "${RSYNC_SSH_COMMAND}" \
     "${PROJECT_ROOT}/" "${DEPLOY_TARGET}:${DEPLOY_PATH}/"
 
+log "Validando variáveis do PostgreSQL local na VM"
+ssh "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && for variable in POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD; do grep -q \"^\${variable}=\" .env.production || { echo \"Variável ausente no .env.production: \${variable}\" >&2; exit 1; }; done"
+
 log "Reconstruindo e recriando a aplicação"
-ssh "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && docker compose -f '${COMPOSE_FILE}' build --no-cache app && docker compose -f '${COMPOSE_FILE}' up -d --force-recreate app"
+ssh "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && docker compose -f '${COMPOSE_FILE}' up -d postgres && docker compose -f '${COMPOSE_FILE}' build --no-cache app && docker compose -f '${COMPOSE_FILE}' up -d --force-recreate app"
 
 log "Validando container e endpoint"
-ssh "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && docker compose -f '${COMPOSE_FILE}' ps"
+ssh "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && docker compose -f '${COMPOSE_FILE}' ps && test \"\$(docker inspect --format '{{.State.Health.Status}}' barbearia_postgres_prod)\" = healthy"
 curl --fail --silent --show-error --location --head --max-time 30 "${DEPLOY_URL}" >/dev/null
 
 log "Deploy concluído: ${DEPLOY_URL}"
