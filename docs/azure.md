@@ -406,6 +406,10 @@ O build compila os assets frontend e pode consumir bastante memória na VM de
 1 GiB. O entrypoint executa as migrations e recria os caches de configuração,
 eventos, rotas e views.
 
+O script `scripts/deploy.sh` usa o cache do Docker por padrão e limita o build
+remoto a 15 minutos. Use `./scripts/deploy.sh --no-cache` somente quando for
+necessário invalidar todas as camadas do build.
+
 ### 3. Validar o deploy
 
 Ainda na VM:

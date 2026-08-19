@@ -141,6 +141,15 @@ Para usar uma chave privada específica:
 ./scripts/deploy.sh --ssh-key /caminho/seguro/barbearia_key.pem
 ```
 
+O build usa o cache do Docker por padrão. Para forçar uma reconstrução completa:
+
+```bash
+./scripts/deploy.sh --ssh-key /caminho/seguro/barbearia_key.pem --no-cache
+```
+
+O build remoto tem limite padrão de 15 minutos, configurável com
+`DEPLOY_BUILD_TIMEOUT`.
+
 ---
 
 ## Estrutura
