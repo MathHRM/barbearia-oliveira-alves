@@ -116,9 +116,10 @@ Aponte `DB_*` para a Internal Database URL do Render e defina `APP_KEY` uma vez
 
 ## Deploy na Azure
 
-O planejamento da infraestrutura Azure está documentado em
-[`docs/azure.md`](docs/azure.md). O deploy Azure ainda está em preparação e não
-substitui automaticamente o fluxo documentado do Render.
+O estado atual da infraestrutura Azure e o procedimento de migração do banco
+estão documentados em [`docs/azure.md`](docs/azure.md). A aplicação roda em uma
+VM com PostgreSQL 16 local em Docker; o PostgreSQL dedicado da Azure foi parado
+após a migração e permanece disponível somente como rollback temporário.
 
 Para executar o fluxo documentado de sincronização, build, recriação e health
 check a partir da raiz do projeto:

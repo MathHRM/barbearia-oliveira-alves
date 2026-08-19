@@ -5,13 +5,13 @@ Barbearia Oliveira Alves na Azure.
 
 ## Status atual
 
-**Aplicação publicada com domínio e HTTPS ativo. Validação funcional ainda pendente.**
+**Aplicação publicada com domínio e HTTPS ativo, usando PostgreSQL local na VM.**
 
-O PostgreSQL e a VM já foram criados no portal. O acesso SSH foi validado, o
-Docker foi instalado e a aplicação está respondendo pelo domínio
-`barbearia-oliveira-alves.matheushrm.dev` com HTTPS. O administrador, os
-barbeiros, os serviços e os horários iniciais já foram cadastrados. Ainda falta
-a validação funcional completa do sistema.
+O PostgreSQL Flexible Server e a VM foram criados no portal. O acesso SSH foi
+validado, o Docker foi instalado e a aplicação responde pelo domínio
+`barbearia-oliveira-alves.matheushrm.dev` com HTTPS. O banco foi migrado para um
+PostgreSQL 16 em Docker dentro da VM; o servidor PostgreSQL dedicado da Azure
+foi parado, mas não excluído, para manter rollback temporário.
 
 ⚠️ **Operação manual:** o estado abaixo foi confirmado pelas telas do portal e
 pelo teste informado pelo usuário. O repositório não consulta a assinatura
@@ -52,34 +52,36 @@ Motivos:
 - a B2ats v2 aparece como gratuita na assinatura, com 750 horas mensais;
 - não é necessário adotar Kubernetes ou dividir o monólito em serviços.
 
-### PostgreSQL fora da VM
+### PostgreSQL dentro da VM
 
-O PostgreSQL será executado no **Azure Database for PostgreSQL Flexible
-Server**, separado da VM.
+O PostgreSQL de produção é executado no serviço `postgres` do
+`docker-compose.prod.yml`, usando a imagem `postgres:16-alpine` e o volume
+persistente `barbearia_postgres_data`.
 
 ```text
 VM B2ats v2
-  Laravel/FrankenPHP via Docker
+  |
+  +-- Laravel/FrankenPHP via Docker
+  |
+  +-- PostgreSQL 16 via Docker
           |
-          | TCP 5432 + SSL
-          v
-PostgreSQL Flexible Server B1ms
+          +-- volume barbearia_postgres_data
 ```
 
-Essa decisão foi tomada para aprendizado e separação de responsabilidades.
-Permite praticar conexão com banco externo, firewall, credenciais de produção,
-SSL e migrations remotas. Também evita que Laravel e PostgreSQL disputem a
-memória de uma VM pequena.
+Essa decisão reduz o custo mensal e elimina a dependência operacional do banco
+gerenciado. A aplicação acessa o banco pela rede interna do Compose, usando
+`DB_HOST=postgres`; a porta 5432 não é publicada para a internet.
 
-O custo operacional é maior do que colocar o banco no mesmo Docker Compose,
-mas o B1ms aparece dentro da cota gratuita do PostgreSQL.
+O custo é assumir a operação do PostgreSQL, dos backups e da disponibilidade
+da VM. Por isso, o volume persistente e uma rotina de backup fora da VM são
+essenciais.
 
 ### Serviços que não serão usados agora
 
 Não serão provisionados neste primeiro estágio:
 
 - Azure Blob Storage;
-- backup manual ou serviço Azure Backup;
+- backup automatizado externo;
 - Redis;
 - queue worker;
 - scheduler;
@@ -90,17 +92,18 @@ Não serão provisionados neste primeiro estágio:
 - Azure DNS;
 - envio real de e-mails.
 
-O PostgreSQL Flexible Server pode manter backup automático mínimo obrigatório
-do próprio serviço. Isso é diferente de configurarmos uma rotina de backup da
-aplicação; a retenção escolhida foi a mínima de 7 dias.
+O PostgreSQL local possui um backup manual inicial em
+`~/barbearia/backups/barbearia-local.dump`. Ainda não há uma rotina automática
+de backup externo; isso permanece como próximo trabalho operacional.
 
 ## Alternativas analisadas
 
-### PostgreSQL dentro da VM
+### PostgreSQL fora da VM
 
-Seria a opção mais barata e simples. Também seria compatível com o Compose
-atual. Foi mantida como alternativa futura, mas não será usada agora porque
-queremos aprender a operar um banco gerenciado fora da aplicação.
+Foi usado inicialmente o **Azure Database for PostgreSQL Flexible Server**.
+Depois da migração validada, o servidor dedicado foi parado para reduzir custo.
+Ele permanece disponível como rollback temporário e não deve ser excluído antes
+de confirmar os backups e a estabilidade do banco local.
 
 Desvantagens da opção local:
 
@@ -348,13 +351,14 @@ diretamente na VM de produção.
 
 ### Arquivos de produção preparados
 
-Foram adicionados:
+Foram adicionados ou atualizados:
 
-- `docker-compose.prod.yml`: inicia somente o container `app`, publica as portas
-  `80` e `443` e mantém `/app/storage`, `/data` e `/config` em volumes Docker;
+- `docker-compose.prod.yml`: inicia `app` e `postgres`, publica somente as
+  portas `80` e `443` e mantém dados da aplicação, Caddy e PostgreSQL em
+  volumes Docker;
 - `.env.production.example`: modelo sem senha ou chave da aplicação;
-- ajuste em `config/database.php`: `DB_SSLMODE` agora pode definir o modo SSL,
-  permitindo `require` no PostgreSQL do Azure.
+- `.env.production`: na VM, `DB_HOST=postgres`, `DB_SSLMODE=disable` e as
+  variáveis `POSTGRES_*` inicializam o banco local.
 
 O arquivo real `.env.production` deve ser criado somente na VM. Ele é ignorado
 por Git e não deve ser enviado ao repositório. O Compose de produção foi
@@ -430,6 +434,70 @@ docker compose -f docker-compose.prod.yml up -d --force-recreate app
 Não versionar o `.env.production` nem colocar senhas em comandos registrados no
 histórico do shell.
 
+## Migração do PostgreSQL para a VM
+
+A migração foi executada em agosto de 2026, sem novos agendamentos durante a
+troca.
+
+### Banco local
+
+O serviço de produção usa:
+
+- imagem `postgres:16-alpine`;
+- serviço Compose `postgres`;
+- volume persistente `barbearia_postgres_data`;
+- healthcheck com `pg_isready`;
+- nenhuma publicação da porta 5432.
+
+As variáveis `POSTGRES_DB`, `POSTGRES_USER` e `POSTGRES_PASSWORD` existem
+somente no `.env.production` da VM. O arquivo `.env.production` não deve ser
+versionado ou enviado por `rsync`.
+
+### Cópia e restauração
+
+O dump foi criado a partir do Flexible Server com `pg_dump` 16 em formato
+custom, usando `--no-owner` e `--no-acl`, e restaurado no banco local com
+`pg_restore`. O arquivo temporário usado foi `barbearia-azure.dump`.
+
+Após a restauração, as 15 tabelas da aplicação e a extensão `btree_gist` foram
+encontradas no banco local. Um backup adicional foi criado em:
+
+```text
+~/barbearia/backups/barbearia-local.dump
+```
+
+Esse backup deve ser copiado para fora da VM. Um backup armazenado somente no
+mesmo disco não protege contra perda da VM ou do disco.
+
+### Corte para o banco local
+
+O corte foi feito alterando o `.env.production` para:
+
+```env
+DB_HOST=postgres
+DB_PORT=5432
+DB_DATABASE=barbearia
+DB_USERNAME=barbeariaadmin
+DB_SSLMODE=disable
+```
+
+Depois, o container `app` foi recriado e o domínio continuou respondendo após
+o PostgreSQL Azure ser parado. Isso confirma que a aplicação passou a usar o
+banco local.
+
+### Rollback
+
+Se for necessário voltar temporariamente ao banco Azure:
+
+1. iniciar o PostgreSQL Flexible Server e aguardar o estado `Ready`;
+2. parar o container `app`;
+3. restaurar no `.env.production` o `DB_HOST` Azure e `DB_SSLMODE=require`;
+4. recriar o container `app`;
+5. validar login, painel e agendamento.
+
+O servidor Azure deve permanecer parado, e não excluído, até a validação dos
+backups e da operação do banco local terminar.
+
 ### Incidentes resolvidos no primeiro deploy
 
 - `btree_gist` foi adicionado à lista `azure.extensions` do PostgreSQL Azure,
@@ -490,12 +558,13 @@ a responder e o HTTPS pelo domínio foi validado.
 |   443 | HTTPS      | Público                                           |
 |  5432 | PostgreSQL | Não abrir na VM                                   |
 
-O PostgreSQL será acessado pela aplicação através do endpoint do Flexible
-Server. A porta 5432 não deve ser publicada pela VM.
+O PostgreSQL é acessado pela aplicação através do serviço interno `postgres`.
+A porta 5432 não deve ser publicada pela VM.
 
 ## Configuração prevista da aplicação
 
-Na produção, o Docker Compose não iniciará o container local `postgres`.
+Na produção, o Docker Compose inicia o container local `postgres` e a aplicação
+aguarda o healthcheck do banco antes de iniciar.
 
 As variáveis principais serão semelhantes a:
 
@@ -505,12 +574,12 @@ APP_DEBUG=false
 APP_URL=https://app.matheushrm.dev
 
 DB_CONNECTION=pgsql
-DB_HOST=<servidor>.postgres.database.azure.com
+DB_HOST=postgres
 DB_PORT=5432
 DB_DATABASE=barbearia
 DB_USERNAME=barbeariaadmin
 DB_PASSWORD=<segredo armazenado fora do Git>
-DB_SSLMODE=require
+DB_SSLMODE=disable
 
 QUEUE_CONNECTION=sync
 # scheduler não utilizado neste estágio
@@ -615,8 +684,9 @@ docker compose -f docker-compose.prod.yml up -d app
 registro A de `barbearia-oliveira-alves.matheushrm.dev` precisará ser atualizado
 antes de acessar o domínio.
 
-O PostgreSQL Flexible Server também deverá ser parado quando a aplicação não
-estiver sendo usada. O banco não ficará disponível enquanto estiver parado.
+O PostgreSQL Flexible Server dedicado foi parado após a migração. Ele não deve
+ser iniciado novamente sem atualizar suas credenciais, pois a senha anterior
+foi exposta durante a inspeção da configuração.
 
 Discos, IP público e outros recursos podem continuar gerando consumo mesmo com
 a VM desalocada. Antes de excluir a VM, verificar também discos, NIC e IP
@@ -624,13 +694,13 @@ público, pois eles podem permanecer separados no grupo de recursos.
 
 ## Próximas etapas
 
-1. Confirmar periodicamente no portal que a regra do PostgreSQL continua
-   limitada ao IP público atual da VM.
+1. Copiar o backup `barbearia-local.dump` para fora da VM.
 2. Confirmar periodicamente no Network Security Group que SSH continua
    restrito ao IP do administrador.
 3. Validar página pública, login, agendamento e painel.
 4. Testar desalocação e inicialização dos recursos.
 5. Conferir o consumo no Azure Cost Management.
+6. Excluir o PostgreSQL Azure somente após uma janela de rollback acordada.
 
 ## Inicialização do administrador e catálogo
 
@@ -641,9 +711,9 @@ registrado no procedimento operacional do deploy.
 
 ## Riscos aceitos neste estágio
 
-- sem backup manual da aplicação;
+- backup manual do banco criado na VM, ainda dependente de cópia externa;
 - sem alta disponibilidade;
-- banco com acesso público, protegido por firewall de IP;
+- banco sem porta pública, acessível pela rede interna do Docker;
 - uma única VM para a aplicação;
 - VM de baixa memória;
 - sem envio de e-mail;

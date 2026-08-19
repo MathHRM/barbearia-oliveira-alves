@@ -18,8 +18,26 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     stop_grace_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: barbearia_postgres_prod
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
   app_storage:
   caddy_data:
   caddy_config:
+  postgres_data:
