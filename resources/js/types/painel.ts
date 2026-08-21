@@ -10,6 +10,7 @@ export interface AgendaCustomer {
 export interface AgendaRow {
     id: number;
     code: string;
+    date: string;
     starts_at: string;
     ends_at: string;
     status: string;

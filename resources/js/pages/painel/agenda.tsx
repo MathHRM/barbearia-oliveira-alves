@@ -5,16 +5,22 @@ import { StatusBadge } from '@/components/painel/status-badge';
 import { Button } from '@/components/ui/button';
 import { CheckboxField } from '@/components/ui/checkbox-field';
 import { DateInput, TimeInput } from '@/components/ui/date-time-input';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { PainelLayout } from '@/layouts/painel-layout';
-import { brl, longDate, relativeDay } from '@/lib/format';
+import { brl, isoDate, longDate, relativeDay } from '@/lib/format';
 import type { AgendaBlock, AgendaRow, AgendaTotals, PainelBarber, PainelService } from '@/types/painel';
 import { Head, router, useForm } from '@inertiajs/react';
-import { CalendarOff, Check, ChevronLeft, ChevronRight, Trash2, X } from 'lucide-react';
+import { CalendarDays, CalendarOff, Check, ChevronLeft, ChevronRight, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
+
+type ViewMode = 'day' | 'week' | 'month';
 
 interface Props {
     date: string;
+    view: ViewMode;
+    rangeStart: string;
+    rangeEnd: string;
     prev: string;
     next: string;
     today: string;
@@ -27,17 +33,36 @@ interface Props {
     can: { see_revenue: boolean; filter_barbers: boolean };
 }
 
-export default function Agenda({ date, prev, next, today, barberId, barbers, rows, blocks, totals, services, can }: Props) {
+export default function Agenda({
+    date,
+    view,
+    rangeStart,
+    rangeEnd,
+    prev,
+    next,
+    today,
+    barberId,
+    barbers,
+    rows,
+    blocks,
+    totals,
+    services,
+    can,
+}: Props) {
     const [canceling, setCanceling] = useState<AgendaRow | null>(null);
+    const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
     const go = (patch: Record<string, string | number | null>) => {
-        router.get('/painel/agenda', { date, barber_id: barberId, ...patch }, { preserveScroll: true, preserveState: true });
+        router.get('/painel/agenda', { date, view, barber_id: barberId, ...patch }, { preserveScroll: true, preserveState: true });
     };
+
+    const title = view === 'day' ? longDate(date) : view === 'week' ? `Semana de ${longDate(rangeStart)}` : monthLabel(date);
+    const selectedRows = selectedDay ? rows.filter((row) => row.date === selectedDay) : [];
 
     return (
         <PainelLayout
             title="Agenda"
-            subtitle={longDate(date)}
+            subtitle={title}
             actions={
                 <div className="flex justify-end">
                     <ManualAppointmentDialog date={date} services={services} barbers={barbers} canPickBarber={can.filter_barbers} />
@@ -46,19 +71,42 @@ export default function Agenda({ date, prev, next, today, barberId, barbers, row
         >
             <Head title="Agenda" />
 
-            <div className="mb-5 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:flex-wrap">
+            <div className="mb-5 flex flex-wrap items-center gap-2">
                 <Button className="min-h-11 px-2 sm:min-h-9 sm:px-3" variant="outline" size="sm" onClick={() => go({ date: prev })}>
                     <ChevronLeft className="size-4" /> <span className="hidden sm:inline">Anterior</span>
                 </Button>
-                <DateInput value={date} onChange={(value) => go({ date: value })} className="w-full sm:w-[11.5rem]" aria-label="Dia da agenda" />
+                <DateInput
+                    value={date}
+                    onChange={(value) => go({ date: value })}
+                    className="min-w-0 flex-1 sm:w-[11.5rem] sm:flex-none"
+                    aria-label="Data de referência da agenda"
+                />
                 <Button className="min-h-11 px-2 sm:min-h-9 sm:px-3" variant="outline" size="sm" onClick={() => go({ date: next })}>
                     <span className="hidden sm:inline">Próximo</span> <ChevronRight className="size-4" />
                 </Button>
                 {date !== today && (
-                    <Button className="col-span-3 min-h-10 sm:min-h-9" variant="ghost" size="sm" onClick={() => go({ date: today })}>
+                    <Button className="min-h-10 sm:min-h-9" variant="ghost" size="sm" onClick={() => go({ date: today })}>
                         Hoje
                     </Button>
                 )}
+
+                <div
+                    className="border-border bg-muted/40 flex w-full rounded-lg border p-1 sm:ml-2 sm:w-auto"
+                    role="group"
+                    aria-label="Visualização da agenda"
+                >
+                    {(['day', 'week', 'month'] as const).map((option) => (
+                        <button
+                            key={option}
+                            type="button"
+                            aria-pressed={view === option}
+                            onClick={() => go({ view: option })}
+                            className={`min-h-10 flex-1 rounded-md px-3 text-sm font-medium transition sm:min-h-8 sm:flex-none ${view === option ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            {viewLabel(option)}
+                        </button>
+                    ))}
+                </div>
 
                 {can.filter_barbers && (
                     <select
@@ -79,7 +127,7 @@ export default function Agenda({ date, prev, next, today, barberId, barbers, row
             <div className="grid gap-5 lg:grid-cols-[1fr_20rem] lg:gap-6">
                 <aside className="order-first space-y-5 lg:order-last lg:space-y-6">
                     <section className="space-y-3">
-                        <p className="eyebrow">{relativeDay(date, today)} em números</p>
+                        <p className="eyebrow">{view === 'day' ? `${relativeDay(date, today)} em números` : `${viewLabel(view)} em números`}</p>
                         <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                             <StatCard label="Agendados" value={String(totals.scheduled)} />
                             <StatCard label="Compareceram" value={String(totals.attended)} />
@@ -98,19 +146,268 @@ export default function Agenda({ date, prev, next, today, barberId, barbers, row
                     <BlockPanel key={date} date={date} barbers={barbers} barberId={barberId} blocks={blocks} canPickBarber={can.filter_barbers} />
                 </aside>
 
-                <div className="order-last space-y-3 lg:order-first">
-                    {rows.length === 0 ? (
-                        <div className="border-border text-muted-foreground rounded-[1.125rem] border border-dashed p-8 text-center text-sm sm:p-10">
-                            Nenhum agendamento nesse dia.
-                        </div>
-                    ) : (
-                        rows.map((row) => <Row key={row.id} row={row} showBarber={barberId === null} onCancel={() => setCanceling(row)} />)
-                    )}
+                <div className="order-last min-w-0 lg:order-first">
+                    {view === 'day' && <DayView rows={rows} showBarber={barberId === null} onCancel={setCanceling} />}
+                    {view === 'week' && <WeekView rows={rows} rangeStart={rangeStart} rangeEnd={rangeEnd} onOpenDay={setSelectedDay} />}
+                    {view === 'month' && <MonthView rows={rows} date={date} rangeStart={rangeStart} rangeEnd={rangeEnd} onOpenDay={setSelectedDay} />}
                 </div>
             </div>
 
             <CancelDialog row={canceling} onClose={() => setCanceling(null)} />
+            <DayAppointmentsDialog
+                date={selectedDay}
+                rows={selectedRows}
+                showBarber={barberId === null}
+                onClose={() => setSelectedDay(null)}
+                onCancel={setCanceling}
+            />
         </PainelLayout>
+    );
+}
+
+function viewLabel(view: ViewMode): string {
+    return view === 'day' ? 'Dia' : view === 'week' ? 'Semana' : 'Mês';
+}
+
+function monthLabel(date: string): string {
+    const [year, month] = date.split('-').map(Number);
+
+    return new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+}
+
+function dateRange(start: string, end: string): string[] {
+    const [startYear, startMonth, startDay] = start.split('-').map(Number);
+    const [endYear, endMonth, endDay] = end.split('-').map(Number);
+    const current = new Date(startYear, startMonth - 1, startDay);
+    const last = new Date(endYear, endMonth - 1, endDay);
+    const dates: string[] = [];
+
+    while (current <= last) {
+        dates.push(isoDate(current));
+        current.setDate(current.getDate() + 1);
+    }
+
+    return dates;
+}
+
+function DayView({ rows, showBarber, onCancel }: { rows: AgendaRow[]; showBarber: boolean; onCancel: (row: AgendaRow) => void }) {
+    if (rows.length === 0) {
+        return <EmptyAgenda label="Nenhum agendamento nesse dia." />;
+    }
+
+    return (
+        <div className="space-y-3">
+            {rows.map((row) => (
+                <Row key={row.id} row={row} showBarber={showBarber} onCancel={() => onCancel(row)} />
+            ))}
+        </div>
+    );
+}
+
+function WeekView({
+    rows,
+    rangeStart,
+    rangeEnd,
+    onOpenDay,
+}: {
+    rows: AgendaRow[];
+    rangeStart: string;
+    rangeEnd: string;
+    onOpenDay: (date: string) => void;
+}) {
+    const days = dateRange(rangeStart, rangeEnd);
+    const hours = Array.from(new Set(rows.map((row) => row.starts_at))).sort();
+    const byDateAndHour = rows.reduce<Record<string, AgendaRow[]>>((grouped, row) => {
+        (grouped[`${row.date}-${row.starts_at}`] ??= []).push(row);
+        return grouped;
+    }, {});
+
+    if (hours.length === 0) {
+        return <EmptyAgenda label="Nenhum agendamento nessa semana." />;
+    }
+
+    return (
+        <div className="border-border bg-card overflow-hidden rounded-[1.125rem] border">
+            <div className="grid grid-cols-[3.75rem_repeat(7,minmax(0,1fr))] border-b">
+                <div className="text-muted-foreground flex items-center justify-center p-2 text-[10px] font-semibold tracking-[0.08em] uppercase">
+                    Hora
+                </div>
+                {days.map((day) => (
+                    <WeekDayHeader key={day} date={day} onOpenDay={onOpenDay} />
+                ))}
+            </div>
+            {hours.map((hour) => (
+                <div key={hour} className="border-border/70 grid grid-cols-[3.75rem_repeat(7,minmax(0,1fr))] border-b last:border-b-0">
+                    <div className="text-muted-foreground bg-muted/20 tabular border-border/70 flex min-h-20 items-start justify-center border-r px-1 pt-3 text-xs font-semibold">
+                        {hour}
+                    </div>
+                    {days.map((day) => (
+                        <div key={`${day}-${hour}`} className="border-border/70 min-h-20 border-r p-1.5 last:border-r-0">
+                            {(byDateAndHour[`${day}-${hour}`] ?? []).map((row) => (
+                                <CompactAppointment key={row.id} row={row} onClick={() => onOpenDay(row.date)} />
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function WeekDayHeader({ date, onOpenDay }: { date: string; onOpenDay: (date: string) => void }) {
+    const parsed = new Date(`${date}T12:00:00`);
+    const heading = parsed.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+
+    return (
+        <button type="button" onClick={() => onOpenDay(date)} className="border-border/70 group hover:bg-accent/50 min-h-14 border-l p-2 text-left">
+            <span className="text-muted-foreground block text-[10px] font-medium tracking-[0.08em] uppercase">{heading}</span>
+            <span className="font-display group-hover:text-primary text-base font-semibold">{parsed.getDate()}</span>
+        </button>
+    );
+}
+
+function MonthView({
+    rows,
+    date,
+    rangeStart,
+    rangeEnd,
+    onOpenDay,
+}: {
+    rows: AgendaRow[];
+    date: string;
+    rangeStart: string;
+    rangeEnd: string;
+    onOpenDay: (date: string) => void;
+}) {
+    const first = new Date(`${rangeStart}T12:00:00`);
+    const last = new Date(`${rangeEnd}T12:00:00`);
+    const leading = (first.getDay() + 6) % 7;
+    const calendarStart = new Date(first);
+    calendarStart.setDate(first.getDate() - leading);
+    const calendarEnd = new Date(last);
+    calendarEnd.setDate(last.getDate() + (7 - ((last.getDay() + 6) % 7) - 1));
+    const days = dateRange(isoDate(calendarStart), isoDate(calendarEnd));
+    const byDate = rows.reduce<Record<string, AgendaRow[]>>((grouped, row) => {
+        (grouped[row.date] ??= []).push(row);
+        return grouped;
+    }, {});
+    const weekdays = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
+
+    return (
+        <div className="border-border bg-card overflow-hidden rounded-[1.125rem] border">
+            <div className="bg-muted/30 grid grid-cols-7 border-b">
+                {weekdays.map((weekday) => (
+                    <div key={weekday} className="text-muted-foreground py-2 text-center text-[11px] font-semibold tracking-[0.12em] uppercase">
+                        {weekday}
+                    </div>
+                ))}
+            </div>
+            <div className="grid grid-cols-7">
+                {days.map((day) => {
+                    const outside = day.slice(0, 7) !== date.slice(0, 7);
+                    const dayRows = byDate[day] ?? [];
+
+                    return (
+                        <button
+                            key={day}
+                            type="button"
+                            onClick={() => onOpenDay(day)}
+                            aria-label={`${longDate(day)}: ${dayRows.length} agendamento${dayRows.length === 1 ? '' : 's'}`}
+                            className={`border-border/70 hover:bg-accent/50 focus-visible:ring-ring min-h-16 border-r border-b p-1 text-left align-top transition focus-visible:z-10 focus-visible:ring-2 focus-visible:outline-none sm:min-h-32 sm:p-2 ${outside ? 'bg-muted/15 text-muted-foreground' : ''}`}
+                        >
+                            <span
+                                className={`mb-1 flex size-6 items-center justify-center rounded-full text-[11px] font-semibold sm:mb-2 sm:size-7 sm:text-xs ${day === date ? 'bg-primary text-primary-foreground' : ''}`}
+                            >
+                                {Number(day.slice(-2))}
+                            </span>
+                            <span className="flex items-center gap-1 sm:hidden">
+                                {dayRows.length > 0 && <span className="bg-primary size-1.5 rounded-full" />}
+                                {dayRows.length > 0 && <span className="text-muted-foreground text-[10px] font-semibold">{dayRows.length}</span>}
+                            </span>
+                            <span className="hidden space-y-1 sm:block">
+                                {dayRows.slice(0, 3).map((row) => (
+                                    <span
+                                        key={row.id}
+                                        className="border-primary/30 bg-primary/10 text-foreground block truncate rounded px-1.5 py-1 text-[11px]"
+                                    >
+                                        <span className="tabular font-semibold">{row.starts_at}</span> {row.customer.name}
+                                    </span>
+                                ))}
+                                {dayRows.length > 3 && (
+                                    <span className="text-muted-foreground block px-1 text-[11px]">+{dayRows.length - 3} horários</span>
+                                )}
+                            </span>
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+function CompactAppointment({ row, onClick }: { row: AgendaRow; onClick: () => void }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className="border-border/80 hover:bg-accent/50 focus-visible:ring-ring block w-full rounded-lg border px-1.5 py-1.5 text-left transition focus-visible:ring-2 focus-visible:outline-none sm:px-2 sm:py-2"
+        >
+            <div className="flex items-center justify-between gap-1">
+                <span className="tabular text-primary text-[10px] font-semibold sm:text-xs">{row.starts_at}</span>
+                <span className="hidden sm:inline">
+                    <StatusBadge tone={row.tone}>{row.status_label}</StatusBadge>
+                </span>
+            </div>
+            <p className="mt-0.5 truncate text-[10px] font-semibold sm:mt-1 sm:text-xs">{row.customer.name}</p>
+            <p className="text-muted-foreground mt-0.5 hidden truncate text-[11px] sm:block">{row.service}</p>
+        </button>
+    );
+}
+
+function DayAppointmentsDialog({
+    date,
+    rows,
+    showBarber,
+    onClose,
+    onCancel,
+}: {
+    date: string | null;
+    rows: AgendaRow[];
+    showBarber: boolean;
+    onClose: () => void;
+    onCancel: (row: AgendaRow) => void;
+}) {
+    if (!date) {
+        return null;
+    }
+
+    return (
+        <Dialog open onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="max-h-[88dvh] overflow-y-auto p-4 sm:max-w-2xl sm:p-6">
+                <DialogHeader className="pr-8">
+                    <DialogTitle>{longDate(date)}</DialogTitle>
+                    <DialogDescription>
+                        {rows.length === 0
+                            ? 'Nenhum corte marcado neste dia.'
+                            : `${rows.length} corte${rows.length === 1 ? '' : 's'} marcado${rows.length === 1 ? '' : 's'}`}
+                    </DialogDescription>
+                </DialogHeader>
+                {rows.length > 0 ? (
+                    <DayView rows={rows} showBarber={showBarber} onCancel={onCancel} />
+                ) : (
+                    <EmptyAgenda label="Nenhum agendamento neste dia." />
+                )}
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function EmptyAgenda({ label }: { label: string }) {
+    return (
+        <div className="border-border text-muted-foreground flex min-h-40 flex-col items-center justify-center rounded-[1.125rem] border border-dashed p-8 text-center text-sm">
+            <CalendarDays className="text-muted-foreground/60 mb-2 size-5" />
+            {label}
+        </div>
     );
 }
 

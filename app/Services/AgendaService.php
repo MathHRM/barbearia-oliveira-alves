@@ -28,6 +28,13 @@ class AgendaService
     {
         [$from, $to] = $this->dayWindow($date);
 
+        return $this->rowsBetween($from, $to, $barberId);
+    }
+
+    /** @return Collection<int, array<string, mixed>> */
+    public function rowsBetween(Carbon $from, Carbon $to, ?int $barberId): Collection
+    {
+
         return Appointment::query()
             ->with(['customer', 'barber', 'service'])
             ->whereBetween('starts_at', [$from, $to])
@@ -101,7 +108,7 @@ class AgendaService
      * @param  Collection<int, array<string, mixed>>  $rows
      * @return array<string, int>
      */
-    public function totals(Collection $rows, string $date, ?int $barberId): array
+    public function totals(Collection $rows, string $date, ?int $barberId, ?Carbon $from = null, ?Carbon $to = null): array
     {
         $by = fn (string $status) => $rows->where('status', $status);
 
@@ -117,20 +124,25 @@ class AgendaService
                 AppointmentStatus::NoShow->value,
             ])->sum('price_cents'),
             'earned_cents' => (int) $by(AppointmentStatus::Attended->value)->sum('price_cents'),
-            'free_slots' => $this->freeSlots($date, $barberId),
+            'free_slots' => $from && $to ? $this->freeSlotsBetween($from, $to, $barberId) : $this->freeSlots($date, $barberId),
         ];
     }
 
     /** Quantos horários ainda dá para vender no dia, medidos pelo serviço mais curto. */
     private function freeSlots(string $date, ?int $barberId): int
     {
+        [$from, $to] = $this->dayWindow($date);
+
+        return $this->freeSlotsBetween($from, $to, $barberId);
+    }
+
+    private function freeSlotsBetween(Carbon $from, Carbon $to, ?int $barberId): int
+    {
         $service = Service::active()->orderBy('duration_min')->first();
 
         if ($service === null) {
             return 0;
         }
-
-        [$from, $to] = $this->dayWindow($date);
 
         return $this->availability->slots($service, $barberId, $from, $to)->count();
     }
@@ -142,6 +154,7 @@ class AgendaService
         return [
             'id' => $appointment->id,
             'code' => $appointment->code(),
+            'date' => $this->local($appointment->starts_at)->toDateString(),
             'starts_at' => $this->local($appointment->starts_at)->format('H:i'),
             'ends_at' => $this->local($appointment->ends_at)->format('H:i'),
             'status' => $appointment->status->value,

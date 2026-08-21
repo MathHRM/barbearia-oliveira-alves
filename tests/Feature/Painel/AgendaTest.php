@@ -88,6 +88,40 @@ class AgendaTest extends TestCase
                 ->where('can.see_revenue', true));
     }
 
+    public function test_agenda_permite_visualizar_a_semana_com_a_data_de_cada_horario(): void
+    {
+        $barber = $this->barber();
+        $service = Service::factory()->create(['duration_min' => 30]);
+
+        Appointment::factory()->for($barber)->for($service)->at(Carbon::parse('2026-08-31 10:00', config('barbearia.timezone')))->create();
+        Appointment::factory()->for($barber)->for($service)->at(Carbon::parse('2026-09-05 11:00', config('barbearia.timezone')))->create();
+
+        $this->actingAs($this->owner())
+            ->get('/painel/agenda?date=2026-09-02&view=week')
+            ->assertInertia(fn ($page) => $page
+                ->where('view', 'week')
+                ->where('rangeStart', '2026-08-31')
+                ->where('rangeEnd', '2026-09-06')
+                ->has('rows', 2)
+                ->where('rows.0.date', '2026-08-31')
+                ->where('rows.1.date', '2026-09-05'));
+    }
+
+    public function test_agenda_permite_visualizar_o_mes(): void
+    {
+        $barber = $this->barber();
+        $service = Service::factory()->create(['duration_min' => 30]);
+        Appointment::factory()->for($barber)->for($service)->at(Carbon::parse('2026-09-30 10:00', config('barbearia.timezone')))->create();
+
+        $this->actingAs($this->owner())
+            ->get('/painel/agenda?date=2026-09-02&view=month')
+            ->assertInertia(fn ($page) => $page
+                ->where('view', 'month')
+                ->where('rangeStart', '2026-09-01')
+                ->where('rangeEnd', '2026-09-30')
+                ->where('rows.0.date', '2026-09-30'));
+    }
+
     /** O painel mostra valor estimado, sem inferir recebimento. */
     public function test_valor_estimado_soma_atendimentos_e_agendamentos_validos(): void
     {
