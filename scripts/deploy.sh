@@ -9,7 +9,7 @@ readonly PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 : "${DEPLOY_PATH:=/home/barbeariaadmin/barbearia}"
 : "${DEPLOY_URL:=https://barbearia-oliveira-alves.matheushrm.dev}"
 : "${COMPOSE_FILE:=docker-compose.prod.yml}"
-: "${DEPLOY_BUILD_TIMEOUT:=6m}"
+: "${DEPLOY_BUILD_TIMEOUT:=15m}"
 
 readonly DEPLOY_TARGET="${DEPLOY_USER}@${DEPLOY_HOST}"
 SSH_KEY=""
@@ -42,7 +42,7 @@ Variáveis opcionais:
   DEPLOY_PATH    diretório da aplicação na VM
   DEPLOY_URL     URL usada no health check
   COMPOSE_FILE   arquivo Compose de produção
-  DEPLOY_BUILD_TIMEOUT tempo máximo do build (padrão: 6m)
+  DEPLOY_BUILD_TIMEOUT tempo máximo do build (padrão: 15m)
   --ssh-key      caminho da chave privada SSH
   --no-cache     força reconstrução completa da imagem
 EOF
@@ -83,7 +83,7 @@ if [[ -n "${SSH_KEY}" ]]; then
     )
 fi
 
-[[ "${DEPLOY_BUILD_TIMEOUT}" =~ ^[0-9]+[smhd]$ ]] || die "DEPLOY_BUILD_TIMEOUT deve usar um valor como 6m, 1h ou 30s."
+[[ "${DEPLOY_BUILD_TIMEOUT}" =~ ^[0-9]+[smhd]$ ]] || die "DEPLOY_BUILD_TIMEOUT deve usar um valor como 15m, 1h ou 30s."
 
 readonly SSH_OPTIONS
 printf -v RSYNC_SSH_COMMAND '%q ' ssh "${SSH_OPTIONS[@]}"
