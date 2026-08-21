@@ -331,6 +331,54 @@ exibe o comando equivalente e ajuda a confirmar o IP, usuário e porta. O
 Azure Cloud Shell também pode ser usado, desde que a chave privada esteja
 disponível nesse ambiente.
 
+### Configurar swap na VM
+
+A VM de produção tem aproximadamente 1 GiB de memória. Antes de um build ou
+de outra operação que possa consumir muita memória, conferir se há swap
+configurado:
+
+```bash
+free -h
+swapon --show
+```
+
+Se `free -h` mostrar `Swap: 0B` e `swapon --show` não listar um dispositivo,
+criar um arquivo de swap de 2 GiB na própria VM:
+
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+```
+
+Validar a ativação:
+
+```bash
+free -h
+swapon --show
+```
+
+O resultado esperado é aproximadamente `Mem: 1Gi` e `Swap: 2Gi`. Para que o
+swap continue ativo após reinicializações, adicionar a entrada ao `/etc/fstab`
+somente se ela ainda não existir:
+
+```bash
+grep -qE '^/swapfile[[:space:]]+none[[:space:]]+swap[[:space:]]' /etc/fstab \
+  || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+Depois, confirmar a configuração persistente sem reiniciar a VM:
+
+```bash
+grep -E '^/swapfile[[:space:]]+none[[:space:]]+swap[[:space:]]' /etc/fstab
+```
+
+⚠️ **Estado não confirmado automaticamente:** a presença do swap deve ser
+verificada na VM com os comandos acima. O procedimento é permanente e evita
+que a configuração seja perdida no próximo reboot; ele não substitui o
+acompanhamento de memória durante builds Docker.
+
 ### Docker instalado
 
 Após a criação da VM, o Docker Engine e o plugin Docker Compose foram
@@ -366,8 +414,8 @@ executado com sucesso após o preenchimento do ambiente e a aplicação está
 respondendo por HTTP e HTTPS.
 
 ⚠️ **Limitação conhecida:** o estágio `prod` do `Dockerfile` compila os assets
-Node durante o build. Como a VM tem apenas 1 GiB de memória, o build pode
-precisar de swap temporário ou ser feito fora da VM caso ocorra falta de
+Node durante o build. Como a VM tem apenas 1 GiB de memória, o build depende de
+swap configurado na VM ou deve ser feito fora dela caso ainda ocorra falta de
 memória.
 
 ## Procedimento de deploy
