@@ -10,7 +10,6 @@ RUN install-php-extensions \
     zip \
     bcmath \
     gd \
-    opcache \
     pcntl
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

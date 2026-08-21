@@ -9,7 +9,7 @@ readonly PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 : "${DEPLOY_PATH:=/home/barbeariaadmin/barbearia}"
 : "${DEPLOY_URL:=https://barbearia-oliveira-alves.matheushrm.dev}"
 : "${COMPOSE_FILE:=docker-compose.prod.yml}"
-: "${DEPLOY_BUILD_TIMEOUT:=15m}"
+: "${DEPLOY_BUILD_TIMEOUT:=6m}"
 
 readonly DEPLOY_TARGET="${DEPLOY_USER}@${DEPLOY_HOST}"
 SSH_KEY=""
@@ -42,7 +42,7 @@ Variáveis opcionais:
   DEPLOY_PATH    diretório da aplicação na VM
   DEPLOY_URL     URL usada no health check
   COMPOSE_FILE   arquivo Compose de produção
-  DEPLOY_BUILD_TIMEOUT tempo máximo do build (padrão: 15m)
+  DEPLOY_BUILD_TIMEOUT tempo máximo do build (padrão: 6m)
   --ssh-key      caminho da chave privada SSH
   --no-cache     força reconstrução completa da imagem
 EOF
@@ -83,7 +83,7 @@ if [[ -n "${SSH_KEY}" ]]; then
     )
 fi
 
-[[ "${DEPLOY_BUILD_TIMEOUT}" =~ ^[0-9]+[smhd]$ ]] || die "DEPLOY_BUILD_TIMEOUT deve usar um valor como 15m, 1h ou 30s."
+[[ "${DEPLOY_BUILD_TIMEOUT}" =~ ^[0-9]+[smhd]$ ]] || die "DEPLOY_BUILD_TIMEOUT deve usar um valor como 6m, 1h ou 30s."
 
 readonly SSH_OPTIONS
 printf -v RSYNC_SSH_COMMAND '%q ' ssh "${SSH_OPTIONS[@]}"
@@ -92,6 +92,19 @@ command -v rsync >/dev/null || die "rsync não encontrado."
 command -v ssh >/dev/null || die "ssh não encontrado."
 
 [[ -f "${PROJECT_ROOT}/${COMPOSE_FILE}" ]] || die "arquivo ${COMPOSE_FILE} não encontrado."
+
+stop_remote_containers() {
+    ssh "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && docker compose -f '${COMPOSE_FILE}' stop" || true
+}
+
+handle_interrupt() {
+    trap - INT TERM
+    printf '\nInterrupção recebida; parando os containers remotos...\n' >&2
+    stop_remote_containers
+    exit 130
+}
+
+trap handle_interrupt INT TERM
 
 log "Validando acesso SSH"
 ssh "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" true
@@ -112,7 +125,7 @@ log "Validando variáveis do PostgreSQL local na VM"
 ssh "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && for variable in POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD; do grep -q \"^\${variable}=\" .env.production || { echo \"Variável ausente no .env.production: \${variable}\" >&2; exit 1; }; done"
 
 log "Reconstruindo e recriando a aplicação"
-ssh "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && docker compose -f '${COMPOSE_FILE}' up -d postgres && BUILDKIT_PROGRESS=plain timeout --signal=TERM --kill-after=30s '${DEPLOY_BUILD_TIMEOUT}' docker compose -f '${COMPOSE_FILE}' build ${BUILD_NO_CACHE} app && docker compose -f '${COMPOSE_FILE}' up -d --force-recreate app"
+ssh -tt "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && docker compose -f '${COMPOSE_FILE}' up -d postgres && BUILDKIT_PROGRESS=plain timeout --signal=TERM --kill-after=30s '${DEPLOY_BUILD_TIMEOUT}' docker compose --progress=plain -f '${COMPOSE_FILE}' build ${BUILD_NO_CACHE} app && docker compose -f '${COMPOSE_FILE}' up -d --force-recreate app"
 
 log "Validando container e endpoint"
 ssh "${SSH_OPTIONS[@]}" "${DEPLOY_TARGET}" "cd '${DEPLOY_PATH}' && docker compose -f '${COMPOSE_FILE}' ps && test \"\$(docker inspect --format '{{.State.Health.Status}}' barbearia_postgres_prod)\" = healthy"
